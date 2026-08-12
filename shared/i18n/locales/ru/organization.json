@@ -1,0 +1,17 @@
+{
+  "actions": "Действия",
+  "resizeSidebar": "Перетащите, чтобы изменить ширину боковой панели",
+  "lockSidebar": "Закрепить боковую панель",
+  "focusSearch": "Поиск", "notifications": "Уведомления: непрочитанных — {{count}}",
+  "nav": { "models": "Модели", "agents": "Агенты", "channels": "Каналы", "cron": "Cron", "skills": "Навыки", "settings": "Настройки" },
+  "newChat": "Новый чат", "newProject": "Новый проект", "projects": "Проекты", "openClawChats": "Чаты OpenClaw", "search": "Поиск чатов", "pinned": "Закрепленные",
+  "sessionList": "Список сессий", "defaultWorkspace": "Рабочая область по умолчанию", "chats": "Чаты", "suggested": "Предложено", "settingsSection": "Настройки", "general": "Общее", "openFolder": "Открыть папку", "searchDescription": "Поиск чатов и команд OpenX", "noChatsFound": "Чаты не найдены", "expand": "Развернуть", "collapse": "Свернуть",
+  "connection": { "unauthorized": "Ошибка авторизации Gateway", "pairingRequired": "Подтвердите устройство OpenX в OpenClaw", "originNotAllowed": "Разрешите Origin OpenX в Gateway", "unreachable": "Хост Gateway недоступен", "reconnecting": "Переподключение (попытка {{count}})", "disconnected": "Соединение с Gateway разорвано" },
+  "typing": "Агент печатает", "newMessage": "Новое сообщение", "pin": "Закрепить", "unpin": "Открепить", "rename": "Переименовать", "delete": "Удалить", "renameFailed": "Не удалось переименовать чат: {{error}}", "pinProject": "Закрепить проект", "unpinProject": "Открепить проект", "pinFolder": "Закрепить папку", "unpinFolder": "Открепить папку", "openInExplorer": "Открыть в Проводнике",
+  "folderName": "Название папки", "renameNode": "Переименовать: {{kind}}", "renameChat": "Переименовать чат", "renameChatTitle": "Переименовать чат", "renameChatDescription": "Кратко и узнаваемо", "newSubfolder": "Новая подпапка", "newFolder": "Новая папка",
+  "openTerminalHere": "Открыть терминал здесь", "moveToPinned": "Переместить в закреплённые", "removeFromProject": "Убрать из проекта", "moveTo": "Переместить в", "deleteChat": "Удалить чат", "deleteChatTitle": "Удалить чат?", "deleteChatConfirm": "Удалить «{{name}}» и его историю в OpenClaw?",
+  "deleteProjectTitle": "Удалить проект?", "deleteFolderTitle": "Удалить папку?", "deleteProjectConfirm": "Удалить «{{name}}» из OpenX? Чаты останутся в OpenClaw и вернутся в общий список с рабочей областью по умолчанию.", "deleteFolderConfirm": "Удалить «{{name}}» из OpenX? Чаты останутся в OpenClaw и вернутся в общий список с рабочей областью по умолчанию.", "deleteFailed": "Не удалось удалить: {{error}}", "deleteConfirm": "Удалить {{kind}} и убрать все вложенные чаты из дерева?",
+  "empty": "Добавьте проект, чтобы организовать чаты по локальным рабочим папкам.",
+  "createTitle": "Создать проект", "createDescription": "Проект связывает чаты с локальной рабочей папкой.", "name": "Название", "workingFolder": "Рабочая папка",
+  "chooseFolder": "Выберите папку проекта", "choosePlaceholder": "Выберите папку…", "browse": "Обзор", "cancel": "Отмена", "save": "Сохранить", "create": "Создать", "creating": "Создание…"
+}

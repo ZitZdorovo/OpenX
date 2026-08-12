@@ -1,0 +1,24 @@
+{
+  "connection": {
+    "title": "Connect to OpenClaw",
+    "subtitle": "Remote Gateway connection",
+    "url": "Gateway URL",
+    "urlHelp": "Use a ws:// address for a trusted private network or wss:// for a secure remote endpoint.",
+    "originHelp": "Gateway allowlist origin: https://openx.invalid",
+    "authMode": "Authentication",
+    "token": "Token",
+    "password": "Password",
+    "connect": "Connect",
+    "connecting": "Connecting…",
+    "secureStorage": "The credential is encrypted with your operating system credential store.",
+    "showCredential": "Show credential",
+    "hideCredential": "Hide credential",
+    "invalidUrl": "Enter a valid ws:// or wss:// Gateway URL.",
+    "credentialsInUrl": "Do not include credentials in the Gateway URL.",
+    "credentialRequired": "Enter the Gateway credential.",
+    "unauthorized": "Authentication failed. Check the token or password.",
+    "pairingRequired": "Approve this OpenX device in OpenClaw. OpenX will reconnect automatically after approval.",
+    "originNotAllowed": "OpenX is not allowed by this Gateway. Add https://openx.invalid to gateway.controlUi.allowedOrigins on the Gateway host.",
+    "unreachable": "The Gateway host is unavailable. Check the address and network."
+  }
+}

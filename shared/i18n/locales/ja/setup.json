@@ -1,0 +1,24 @@
+{
+  "connection": {
+    "title": "OpenClaw に接続",
+    "subtitle": "リモート Gateway 接続",
+    "url": "Gateway URL",
+    "urlHelp": "信頼できるプライベートネットワークでは ws://、安全なリモート接続では wss:// を使用します。",
+    "originHelp": "Gateway の許可リスト Origin: https://openx.invalid",
+    "authMode": "認証",
+    "token": "トークン",
+    "password": "パスワード",
+    "connect": "接続",
+    "connecting": "接続中…",
+    "secureStorage": "認証情報は OS の資格情報ストアで暗号化されます。",
+    "showCredential": "認証情報を表示",
+    "hideCredential": "認証情報を隠す",
+    "invalidUrl": "有効な ws:// または wss:// の Gateway URL を入力してください。",
+    "credentialsInUrl": "Gateway URL に認証情報を含めないでください。",
+    "credentialRequired": "Gateway の認証情報を入力してください。",
+    "unauthorized": "認証に失敗しました。トークンまたはパスワードを確認してください。",
+    "pairingRequired": "OpenClaw でこの OpenX デバイスを承認してください。承認後、OpenX は自動的に再接続します。",
+    "originNotAllowed": "Gateway が OpenX を許可していません。Gateway ホストの gateway.controlUi.allowedOrigins に https://openx.invalid を追加してください。",
+    "unreachable": "Gateway ホストに接続できません。アドレスとネットワークを確認してください。"
+  }
+}

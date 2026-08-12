@@ -1,0 +1,24 @@
+{
+  "connection": {
+    "title": "Подключение к OpenClaw",
+    "subtitle": "Удалённый OpenClaw Gateway",
+    "url": "URL Gateway",
+    "urlHelp": "Используйте ws:// в доверенной частной сети или wss:// для защищённого удалённого адреса.",
+    "originHelp": "Origin для списка доступа Gateway: https://openx.invalid",
+    "authMode": "Авторизация",
+    "token": "Токен",
+    "password": "Пароль",
+    "connect": "Подключиться",
+    "connecting": "Подключение…",
+    "secureStorage": "Секрет шифруется системным хранилищем учётных данных.",
+    "showCredential": "Показать секрет",
+    "hideCredential": "Скрыть секрет",
+    "invalidUrl": "Введите корректный URL Gateway с протоколом ws:// или wss://.",
+    "credentialsInUrl": "Не добавляйте учётные данные в URL Gateway.",
+    "credentialRequired": "Введите токен или пароль Gateway.",
+    "unauthorized": "Ошибка авторизации. Проверьте токен или пароль.",
+    "pairingRequired": "Подтвердите это устройство OpenX в OpenClaw. После подтверждения OpenX подключится автоматически.",
+    "originNotAllowed": "Gateway не разрешает OpenX. Добавьте https://openx.invalid в gateway.controlUi.allowedOrigins на хосте Gateway.",
+    "unreachable": "Gateway недоступен. Проверьте адрес и соединение с сетью."
+  }
+}

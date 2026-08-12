@@ -1,0 +1,12 @@
+{
+  "name": "@openx/harness",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "openx-harness": "./src/cli.mjs"
+  },
+  "scripts": {
+    "start": "node src/cli.mjs"
+  }
+}

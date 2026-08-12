@@ -1,0 +1,16 @@
+{
+  "actions": "Actions",
+  "resizeSidebar": "Drag to resize sidebar",
+  "lockSidebar": "Keep sidebar open",
+  "nav": { "models": "Models", "agents": "Agents", "channels": "Channels", "cron": "Cron", "skills": "Skills", "settings": "Settings" },
+  "newChat": "New chat", "newProject": "New project", "projects": "Projects", "openClawChats": "OpenClaw chats", "search": "Search chats", "focusSearch": "Search", "notifications": "Notifications: {{count}} unread", "pinned": "Pinned",
+  "sessionList": "Session list", "defaultWorkspace": "Default workspace", "chats": "Chats", "suggested": "Suggested", "settingsSection": "Settings", "general": "General", "openFolder": "Open folder", "searchDescription": "Search chats and open OpenX actions", "noChatsFound": "No chats found", "expand": "Expand", "collapse": "Collapse",
+  "connection": { "unauthorized": "Gateway authorization failed", "pairingRequired": "Approve OpenX device in OpenClaw", "originNotAllowed": "Allow OpenX origin on Gateway", "unreachable": "Gateway host unavailable", "reconnecting": "Reconnecting (attempt {{count}})", "disconnected": "Gateway disconnected" },
+  "typing": "Agent is typing", "newMessage": "New message", "pin": "Pin", "unpin": "Unpin", "rename": "Rename", "delete": "Delete", "renameFailed": "Could not rename chat: {{error}}", "pinProject": "Pin project", "unpinProject": "Unpin project", "pinFolder": "Pin folder", "unpinFolder": "Unpin folder", "openInExplorer": "Open in File Explorer",
+  "folderName": "Folder name", "renameNode": "Rename {{kind}}", "renameChat": "Rename chat", "renameChatTitle": "Rename chat", "renameChatDescription": "Brief and recognizable", "newSubfolder": "New subfolder", "newFolder": "New folder",
+  "openTerminalHere": "Open terminal here", "moveToPinned": "Move to Pinned", "removeFromProject": "Remove from project", "moveTo": "Move to", "deleteChat": "Delete chat", "deleteChatTitle": "Delete chat?", "deleteChatConfirm": "Delete “{{name}}” and its OpenClaw transcript?",
+  "deleteProjectTitle": "Delete project?", "deleteFolderTitle": "Delete folder?", "deleteProjectConfirm": "Delete “{{name}}” from OpenX? Its chats will remain in OpenClaw and return to the default session list.", "deleteFolderConfirm": "Delete “{{name}}” from OpenX? Its chats will remain in OpenClaw and return to the default session list.", "deleteFailed": "Could not delete: {{error}}", "deleteConfirm": "Delete this {{kind}} and remove all chats inside from the tree?",
+  "empty": "Add a project to organize chats by a local working folder.",
+  "createTitle": "Create project", "createDescription": "Projects bind chats to a local working directory.", "name": "Name", "workingFolder": "Working folder",
+  "chooseFolder": "Choose project folder", "choosePlaceholder": "Choose a folder…", "browse": "Browse", "cancel": "Cancel", "save": "Save", "create": "Create", "creating": "Creating…"
+}

@@ -1,0 +1,193 @@
+appId: app.openx.desktop
+productName: OpenX
+copyright: Copyright © 2026 OpenX
+compression: maximum
+artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+
+directories:
+  output: release
+  # The previous branded icon set was removed. Point auto-discovery at a
+  # resource directory without an empty icons/ folder so Electron's default
+  # application icon is used until a new OpenX icon is supplied.
+  buildResources: resources/context
+
+files:
+  - dist
+  - dist-electron
+  - package.json
+
+# Keep only the UI languages supported by OpenX instead of shipping every
+# Chromium translation bundled with Electron.
+electronLanguages:
+  - en
+  - ru
+  - zh-CN
+  - ja
+
+extraResources:
+  - from: resources/
+    to: resources/
+    filter:
+      - "**/*"
+      - "!bin/**"
+      - "!screenshot/**"
+  # OpenClaw package (node_modules copied separately by afterPack hook
+  # because electron-builder respects .gitignore which excludes node_modules/)
+  - from: build/openclaw/
+    to: openclaw/
+  # Gateway plugins and skills intentionally stay remote. The desktop bundle
+  # contains only the embedded OpenClaw runtime used by the ACP bridge and CLI.
+
+afterPack: ./scripts/after-pack.cjs
+
+asar: true
+asarUnpack:
+  - "**/*.node"
+  # lru-cache CJS/ESM interop: older CJS versions (v5, v6, v7) don't export
+  # `LRUCache` as a named property, breaking `import { LRUCache }` in Node.js
+  # 22+ (Electron 40+).  Unpacking lets afterPack patch them in place.
+  - "**/node_modules/lru-cache/**"
+
+# Disable native module rebuilding.
+# The Electron renderer/main process has no native (.node) dependencies.
+# All native modules (opus, sharp, koffi …) belong to openclaw, which is
+# bundled separately (bundle-openclaw.mjs → extraResources) and runs in its
+# own process — @electron/rebuild must NOT touch them.
+npmRebuild: false
+
+# Auto-update configuration
+# OpenX releases are isolated from the upstream OpenX update channel so the
+# renamed client can never install an upstream-branded build over itself.
+publish:
+  - provider: github
+    owner: ValueCell-ai
+    repo: OpenX
+
+# macOS Configuration
+mac:
+  extraResources:
+    - from: resources/bin/darwin-${arch}
+      to: bin
+    - from: resources/cli/posix/
+      to: cli/
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch:
+        - x64
+        - arm64
+    - target: zip
+      arch:
+        - x64
+        - arm64
+  darkModeSupport: true
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: entitlements.mac.plist
+  entitlementsInherit: entitlements.mac.plist
+  notarize: true
+  extendInfo:
+    NSMicrophoneUsageDescription: OpenX requires microphone access for voice features
+    NSCameraUsageDescription: OpenX requires camera access for video features
+
+dmg:
+  # Explicit volume size prevents dmg-builder@1.2.0 auto-calculation from
+  # underestimating (causes "No space left on device" for large app bundles).
+  # The final .dmg is bzip2-compressed, so this only affects the temp volume.
+  size: 2g
+  background: resources/dmg-background.png
+  iconSize: 100
+  window:
+    width: 540
+    height: 380
+  contents:
+    - type: file
+      x: 130
+      y: 220
+    - type: link
+      path: /Applications
+      x: 410
+      y: 220
+
+# Windows Configuration
+win:
+  # No branded icon is currently supplied. Explicit null keeps Electron's
+  # built-in application icon and avoids treating resources/icons as an icon set.
+  icon: null
+  # The project has no Windows signing certificate. Avoid downloading and
+  # extracting winCodeSign just to rewrite unsigned executable metadata; that
+  # extraction also requires Developer Mode for symlink creation on Windows.
+  signAndEditExecutable: false
+  # Skip update signature verification: we ship via OSS + GitHub without a
+  # code-signing certificate, so verifying would always fail on the updater.
+  verifyUpdateCodeSignature: false
+  extraResources:
+    - from: resources/cli/win32/
+      to: cli/
+  target:
+    - target: nsis
+      arch: x64
+
+nsis:
+  oneClick: false
+  perMachine: false
+  warningsAsErrors: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false
+  differentialPackage: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: OpenX
+  uninstallDisplayName: OpenX
+  license: LICENSE
+  include: scripts/installer.nsh
+
+# Linux Configuration
+linux:
+  extraResources:
+    - from: resources/bin/linux-${arch}
+      to: bin
+    - from: resources/cli/posix/
+      to: cli/
+  target:
+    - target: AppImage
+      arch:
+        - x64
+        - arm64
+    - target: deb
+      arch:
+        - x64
+        - arm64
+    - target: rpm
+      arch:
+        - x64
+  category: Utility
+  maintainer: OpenX Team <public@valuecell.ai>
+  vendor: OpenX
+  synopsis: AI Assistant powered by OpenClaw
+  description: OpenX is a remote desktop client for managing an existing OpenClaw Gateway.
+  desktop:
+    entry:
+      Name: OpenX
+      Comment: AI Assistant powered by OpenClaw
+      Categories: Utility;Network;
+      Keywords: ai;assistant;automation;chat;
+      StartupWMClass: openx
+
+appImage:
+  license: LICENSE
+
+deb:
+  depends:
+    # Use OR syntax to support both Ubuntu 22.04 and Ubuntu 24.04 (t64 transition).
+    # Ubuntu 24.04 renamed many libraries with a t64 suffix (64-bit time_t ABI transition).
+    - libgtk-3-0 | libgtk-3-0t64
+    - libnotify4 | libnotify4t64
+    - libnss3
+    - libxss1 | libxss1t64
+    - libxtst6 | libxtst6t64
+    - xdg-utils
+    - libatspi2.0-0 | libatspi2.0-0t64
+    - libuuid1
+  afterInstall: scripts/linux/after-install.sh
+  afterRemove: scripts/linux/after-remove.sh

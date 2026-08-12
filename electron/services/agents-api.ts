@@ -1,0 +1,108 @@
+import type { GatewayManager } from '../gateway/manager';
+import type { CompleteHostServiceRegistry } from '../main/ipc/host-contract';
+import {
+  assignChannelToAgent,
+  clearChannelBinding,
+  createAgent,
+  deleteAgentConfig,
+  listAgentsSnapshot,
+  resolveAccountIdForAgent,
+  updateAgentModel,
+  updateAgentName,
+} from '../utils/agent-config';
+import { deleteChannelAccountConfig } from '../utils/channel-config';
+import { isRecord } from './payload-utils';
+
+type AgentsApiContext = {
+  gatewayManager: GatewayManager;
+};
+
+function requireString(payload: unknown, key: string): string {
+  if (!isRecord(payload) || typeof payload[key] !== 'string' || !payload[key].trim()) {
+    throw new Error(`${key} is required`);
+  }
+  return payload[key].trim();
+}
+
+export function createAgentsApi(ctx: AgentsApiContext): CompleteHostServiceRegistry['agents'] {
+  return {
+    list: async () => ({ success: true, ...(await listAgentsSnapshot()) }),
+    create: async (payload) => {
+      const name = requireString(payload, 'name');
+      const inheritWorkspace = isRecord(payload) ? payload.inheritWorkspace === true : undefined;
+      const snapshot = await createAgent(name, { inheritWorkspace });
+      return { success: true, ...snapshot };
+    },
+    update: async (payload) => {
+      const agentId = requireString(payload, 'id');
+      const name = requireString(payload, 'name');
+      const snapshot = await updateAgentName(agentId, name);
+      return { success: true, ...snapshot };
+    },
+    updateModel: async (payload) => {
+      const agentId = requireString(payload, 'id');
+      const modelRef = isRecord(payload) && typeof payload.modelRef === 'string' ? payload.modelRef : null;
+      const snapshot = await updateAgentModel(agentId, modelRef);
+      return { success: true, ...snapshot };
+    },
+    personality: async (payload) => {
+      const agentId = requireString(payload, 'id');
+      const result = await ctx.gatewayManager.rpc<{
+        file?: { content?: string; missing?: boolean };
+      }>('agents.files.get', { agentId, name: 'SOUL.md' });
+      return {
+        success: true,
+        content: typeof result.file?.content === 'string' ? result.file.content : '',
+        missing: result.file?.missing === true,
+      };
+    },
+    updatePersonality: async (payload) => {
+      const agentId = requireString(payload, 'id');
+      if (!isRecord(payload) || typeof payload.content !== 'string') throw new Error('content is required');
+      const result = await ctx.gatewayManager.rpc<{
+        file?: { content?: string; missing?: boolean };
+      }>('agents.files.set', { agentId, name: 'SOUL.md', content: payload.content });
+      return {
+        success: true,
+        content: typeof result.file?.content === 'string' ? result.file.content : payload.content,
+        missing: result.file?.missing === true,
+      };
+    },
+    delete: async (payload) => {
+      const agentId = requireString(payload, 'id');
+      const { snapshot } = await deleteAgentConfig(agentId);
+      return { success: true, ...snapshot };
+    },
+    assignChannel: async (payload) => {
+      const agentId = requireString(payload, 'id');
+      const channelType = requireString(payload, 'channelType');
+      const snapshot = await assignChannelToAgent(agentId, channelType);
+      return { success: true, ...snapshot };
+    },
+    removeChannel: async (payload) => {
+      const agentId = requireString(payload, 'id');
+      const channelType = requireString(payload, 'channelType');
+      const ownerId = agentId.trim().toLowerCase();
+      const snapshotBefore = await listAgentsSnapshot();
+      const ownedAccountIds = Object.entries(snapshotBefore.channelAccountOwners)
+        .filter(([channelAccountKey, owner]) => {
+          if (owner !== ownerId) return false;
+          return channelAccountKey.startsWith(`${channelType}:`);
+        })
+        .map(([channelAccountKey]) => channelAccountKey.slice(channelAccountKey.indexOf(':') + 1));
+      if (ownedAccountIds.length === 0) {
+        const legacyAccountId = resolveAccountIdForAgent(agentId);
+        if (snapshotBefore.channelAccountOwners[`${channelType}:${legacyAccountId}`] === ownerId) {
+          ownedAccountIds.push(legacyAccountId);
+        }
+      }
+
+      for (const accountId of ownedAccountIds) {
+        await deleteChannelAccountConfig(channelType, accountId);
+        await clearChannelBinding(channelType, accountId);
+      }
+      const snapshot = await listAgentsSnapshot();
+      return { success: true, ...snapshot };
+    },
+  };
+}
