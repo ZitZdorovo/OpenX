@@ -6,6 +6,8 @@ import { UpdateToast } from './UpdateToast';
 
 const AVAILABLE_TOAST_ID = 'openx-update-available';
 const DOWNLOADED_TOAST_ID = 'openx-update-downloaded';
+const STARTUP_CHECK_DELAY_MS = 8_000;
+const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1_000;
 
 /**
  * Shows global update prompts outside the Settings page.
@@ -18,10 +20,37 @@ export function UpdateNotifier() {
   const { t } = useTranslation('settings');
   const status = useUpdateStore((state) => state.status);
   const updateInfo = useUpdateStore((state) => state.updateInfo);
+  const init = useUpdateStore((state) => state.init);
+  const checkForUpdates = useUpdateStore((state) => state.checkForUpdates);
   const downloadUpdate = useUpdateStore((state) => state.downloadUpdate);
   const installUpdate = useUpdateStore((state) => state.installUpdate);
   const lastAvailableVersionRef = useRef<string | null>(null);
   const lastDownloadedVersionRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    let disposed = false;
+    let intervalId: number | undefined;
+
+    const checkInBackground = () => {
+      if (!disposed && navigator.onLine) void checkForUpdates({ silent: true });
+    };
+
+    const startupId = window.setTimeout(() => {
+      checkInBackground();
+      intervalId = window.setInterval(checkInBackground, UPDATE_CHECK_INTERVAL_MS);
+    }, STARTUP_CHECK_DELAY_MS);
+
+    const handleOnline = () => checkInBackground();
+    window.addEventListener('online', handleOnline);
+    void init();
+
+    return () => {
+      disposed = true;
+      window.clearTimeout(startupId);
+      if (intervalId !== undefined) window.clearInterval(intervalId);
+      window.removeEventListener('online', handleOnline);
+    };
+  }, [checkForUpdates, init]);
 
   useEffect(() => {
     const version = updateInfo?.version || t('updates.toast.unknownVersion');

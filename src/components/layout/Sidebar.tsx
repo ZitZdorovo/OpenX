@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom';
 import {
   Bot, ChevronDown, ChevronRight, Clock, Cpu, Folder, FolderOpen,
   FolderPlus, MoreHorizontal, Network, Pencil, Pin, Plus, Puzzle, Search,
-  Settings, SquareTerminal, Trash2,
+  CircleArrowUp, Settings, SquareTerminal, Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { useGatewayStore } from '@/stores/gateway';
 import { useAgentsStore } from '@/stores/agents';
 import { useSessionAttentionStore } from '@/stores/session-attention';
 import { useSettingsStore } from '@/stores/settings';
+import { useUpdateStore } from '@/stores/update';
 import { getSessionDisplayTitle } from '@shared/chat/session-title';
 import { projectSessionRunState } from '@/stores/chat/session-status';
 import { groupSessionsByWorkspace } from '@/components/layout/session-buckets';
@@ -152,6 +153,8 @@ export function Sidebar() {
   const agents = useAgentsStore((state) => state.agents);
   const fetchAgents = useAgentsStore((state) => state.fetchAgents);
   const gateway = useGatewayStore((state) => state.status);
+  const updateStatus = useUpdateStore((state) => state.status);
+  const updateInfo = useUpdateStore((state) => state.updateInfo);
   const sessions = useChatStore((state) => state.sessions);
   const currentKey = useChatStore((state) => state.currentSessionKey);
   const labels = useChatStore((state) => state.sessionLabels);
@@ -305,6 +308,14 @@ export function Sidebar() {
     : hasGatewayError
       ? 'text-red-600 dark:text-red-400'
       : 'text-yellow-700 dark:text-yellow-400';
+  const showUpdateIndicator = updateStatus === 'available'
+    || updateStatus === 'downloading'
+    || updateStatus === 'downloaded';
+  const updateLabel = updateStatus === 'downloaded'
+    ? t('update.ready', { version: updateInfo?.version ?? '' })
+    : updateStatus === 'downloading'
+      ? t('update.downloading', { version: updateInfo?.version ?? '' })
+      : t('update.available', { version: updateInfo?.version ?? '' });
 
   useEffect(() => { void loadOrganization().catch(() => {}); }, [loadOrganization]);
   useEffect(() => {
@@ -1010,6 +1021,19 @@ export function Sidebar() {
       <div className="mt-auto p-2">
         <div className="flex items-center gap-1">
           <NavLink to="/settings" title={t('nav.settings')} data-testid="sidebar-nav-settings" className={({ isActive }) => cn('sidebar-nav-text flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2.5 py-1.5 text-foreground/80 transition-colors hover:bg-black/5 dark:hover:bg-white/5', isActive && 'bg-black/5 text-foreground dark:bg-white/10')}><Settings className="h-4 w-4" /><span>{t('nav.settings')}</span></NavLink>
+          {showUpdateIndicator && (
+            <button
+              type="button"
+              data-testid="sidebar-update-available"
+              className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-blue-600 transition-colors hover:bg-blue-500/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:text-blue-400"
+              title={updateLabel}
+              aria-label={updateLabel}
+              onClick={() => navigate('/settings?section=updates')}
+            >
+              <CircleArrowUp className={cn('h-4 w-4', updateStatus === 'downloading' && 'animate-pulse')} />
+              <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-blue-500 ring-2 ring-surface-sidebar" />
+            </button>
+          )}
           <button
             type="button"
             data-testid="gateway-connection-state"

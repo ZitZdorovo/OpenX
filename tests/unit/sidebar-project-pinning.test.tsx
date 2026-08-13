@@ -9,6 +9,7 @@ import { useChatOrganizationStore } from '@/stores/chat-organization';
 import { useGatewayStore } from '@/stores/gateway';
 import { useSessionAttentionStore } from '@/stores/session-attention';
 import { useSettingsStore } from '@/stores/settings';
+import { useUpdateStore } from '@/stores/update';
 
 const initialAgentsState = useAgentsStore.getState();
 const initialChatState = useChatStore.getState();
@@ -16,6 +17,7 @@ const initialOrganizationState = useChatOrganizationStore.getState();
 const initialGatewayState = useGatewayStore.getState();
 const initialAttentionState = useSessionAttentionStore.getState();
 const initialSettingsState = useSettingsStore.getState();
+const initialUpdateState = useUpdateStore.getState();
 const initialPlatform = window.electron.platform;
 
 function renderSidebar() {
@@ -35,6 +37,7 @@ beforeEach(() => {
     workspaceLabels: {},
   });
   useGatewayStore.setState({ status: { state: 'running', port: 18789, gatewayReady: true } });
+  useUpdateStore.setState({ status: 'idle', updateInfo: null, progress: null, error: null });
   useAgentsStore.setState({ agents: [], fetchAgents: vi.fn().mockResolvedValue(undefined) });
   useSessionAttentionStore.setState({ bySessionKey: {}, visibleSessionKey: null });
   useChatStore.setState({
@@ -69,9 +72,37 @@ afterEach(() => {
   useGatewayStore.setState(initialGatewayState, true);
   useSessionAttentionStore.setState(initialAttentionState, true);
   useSettingsStore.setState(initialSettingsState, true);
+  useUpdateStore.setState(initialUpdateState, true);
 });
 
 describe('project sidebar pin and delete behavior', () => {
+  it('shows the update action only while a newer release is actionable', () => {
+    const { rerender } = renderSidebar();
+    expect(screen.queryByTestId('sidebar-update-available')).not.toBeInTheDocument();
+
+    useUpdateStore.setState({
+      status: 'available',
+      updateInfo: { version: '0.0.2' },
+    });
+    rerender(
+      <MemoryRouter>
+        <Sidebar />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByTestId('sidebar-update-available')).toHaveAccessibleName(
+      'OpenX 0.0.2 is available',
+    );
+
+    useUpdateStore.setState({ status: 'not-available', updateInfo: null });
+    rerender(
+      <MemoryRouter>
+        <Sidebar />
+      </MemoryRouter>,
+    );
+    expect(screen.queryByTestId('sidebar-update-available')).not.toBeInTheDocument();
+  });
+
   it('reorders pinned chats on the first drag gesture', async () => {
     const pinChat = vi.fn().mockResolvedValue(undefined);
     useChatStore.setState({

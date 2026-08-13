@@ -28,7 +28,7 @@ interface UpdateState {
 
   // Actions
   init: () => Promise<void>;
-  checkForUpdates: () => Promise<void>;
+  checkForUpdates: (options?: { silent?: boolean }) => Promise<void>;
   downloadUpdate: () => Promise<void>;
   installUpdate: () => void;
   cancelAutoInstall: () => Promise<void>;
@@ -96,8 +96,6 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
 
       set({ isInitialized: true });
 
-      // Automatic checks are temporarily disabled. Manual checks remain available
-      // from Settings so releases cannot be pulled without an explicit user action.
     })();
 
     try {
@@ -109,8 +107,13 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
     }
   },
 
-  checkForUpdates: async () => {
-    set({ status: 'checking', error: null });
+  checkForUpdates: async (options) => {
+    const currentStatus = get().status;
+    if (currentStatus === 'checking' || currentStatus === 'available'
+      || currentStatus === 'downloading' || currentStatus === 'downloaded') return;
+
+    const silent = options?.silent === true;
+    if (!silent) set({ status: 'checking', error: null });
     
     try {
       const result = await Promise.race([
@@ -129,13 +132,16 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
         set({ status: 'error', error: result.error || 'Failed to check for updates' });
       }
     } catch (error) {
-      set({ status: 'error', error: String(error) });
+      if (silent) set({ status: 'idle', error: null });
+      else set({ status: 'error', error: String(error) });
     } finally {
       // In dev mode autoUpdater skips without emitting events, so the
       // status may still be 'checking' or even 'idle'. Catch both.
       const currentStatus = get().status;
-      if (currentStatus === 'checking' || currentStatus === 'idle') {
+      if (!silent && (currentStatus === 'checking' || currentStatus === 'idle')) {
         set({ status: 'error', error: 'Update check completed without a result. This usually means the app is running in dev mode.' });
+      } else if (silent && currentStatus === 'error') {
+        set({ status: 'idle', error: null });
       }
     }
   },

@@ -10,6 +10,7 @@ import { BrowserWindow, app, ipcMain } from 'electron';
 import { logger } from '../utils/logger';
 import { EventEmitter } from 'events';
 import { setQuitting } from './app-state';
+import { resolveUpdaterChannel } from '@shared/update-channel';
 
 export interface UpdateStatus {
   status: 'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
@@ -248,7 +249,8 @@ export class AppUpdater extends EventEmitter {
    * Set update channel (stable, beta, dev)
    */
   setChannel(channel: 'stable' | 'beta' | 'dev'): void {
-    autoUpdater.channel = channel;
+    autoUpdater.channel = resolveUpdaterChannel(channel);
+    autoUpdater.allowPrerelease = channel !== 'stable';
   }
 
   /**
