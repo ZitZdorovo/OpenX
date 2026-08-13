@@ -24,7 +24,7 @@ afterEach(() => {
 });
 
 describe('AcpSessionAccessRegistry', () => {
-  it('preserves remote Gateway workspace paths without checking the desktop filesystem', async () => {
+  it('preserves workspace paths and enables local attachment access by default', async () => {
     const registry = new AcpSessionAccessRegistry();
     const { workspaceRoot, executionCwd, outsideCwd } = createDirectories();
 
@@ -38,7 +38,7 @@ describe('AcpSessionAccessRegistry', () => {
       generation: 1,
       workspaceRoot: join(workspaceRoot, 'packages', '..'),
       executionCwd: join(executionCwd, '.'),
-      localAccess: false,
+      localAccess: true,
     });
 
     await expect(registry.prepareGrant({
@@ -49,7 +49,7 @@ describe('AcpSessionAccessRegistry', () => {
     })).resolves.toMatchObject({
       workspaceRoot,
       executionCwd: outsideCwd,
-      localAccess: false,
+      localAccess: true,
     });
   });
 

@@ -36,6 +36,9 @@ jobs:
       - name: Validate release version
         run: pnpm run release:validate
 
+      - name: Generate extension bridge
+        run: pnpm run ext:bridge
+
       - name: Validate source
         run: |
           pnpm run typecheck

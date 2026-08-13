@@ -2,6 +2,8 @@ import { completeSetup, expect, test } from './fixtures/electron';
 
 test.describe('Channels binding regression', () => {
   test('keeps newly added non-default Feishu accounts unassigned until the user binds an agent', async ({ electronApp, page }) => {
+    await completeSetup(page);
+
     await electronApp.evaluate(({ ipcMain }) => {
       const state = {
         nextAccountId: 'feishu-a1b2c3d4',
@@ -97,9 +99,7 @@ test.describe('Channels binding regression', () => {
       });
     });
 
-    await completeSetup(page);
-
-    await page.getByTestId('sidebar-nav-channels').click();
+    await page.evaluate(() => { window.location.hash = '/channels'; });
     await expect(page.getByTestId('channels-page')).toBeVisible();
     await expect(page.getByText('Feishu / Lark')).toBeVisible();
 

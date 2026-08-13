@@ -36,6 +36,8 @@ const testConfigResponses = {
 
 test.describe('Channels account ID validation', () => {
   test('rejects non-canonical custom account ID before save', async ({ electronApp, page }) => {
+    await completeSetup(page);
+
     await electronApp.evaluate(({ ipcMain }, responses) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (globalThis as any).__openxE2eChannelConfigSaveCount = 0;
@@ -72,9 +74,7 @@ test.describe('Channels account ID validation', () => {
       });
     }, testConfigResponses);
 
-    await completeSetup(page);
-
-    await page.getByTestId('sidebar-nav-channels').click();
+    await page.evaluate(() => { window.location.hash = '/channels'; });
     await expect(page.getByTestId('channels-page')).toBeVisible();
     await expect(page.getByText('Feishu / Lark')).toBeVisible();
 

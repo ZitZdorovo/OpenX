@@ -3,17 +3,18 @@ export type AcpSessionAccessContext = {
   generation: number;
   workspaceRoot: string;
   executionCwd: string;
-  /** False when the cwd belongs to the remote Gateway host, not this desktop. */
-  localAccess?: false;
+  /** Whether attachment references may resolve against this desktop filesystem. */
+  localAccess?: boolean;
 };
 
 export class AcpSessionAccessRegistry {
   private activeGrant: AcpSessionAccessContext | null = null;
 
   async prepareGrant(input: AcpSessionAccessContext): Promise<AcpSessionAccessContext> {
-    // ACP is connected to the user-supplied remote Gateway. Its cwd belongs to
-    // that host and must never be resolved or authorized against this desktop.
-    return { ...input, localAccess: false };
+    // OpenX is a personal desktop client, so existing local attachment paths
+    // remain available. Callers may still pass localAccess: false explicitly
+    // for a deliberately isolated session.
+    return { ...input, localAccess: input.localAccess ?? true };
   }
 
   snapshot(): AcpSessionAccessContext | null {

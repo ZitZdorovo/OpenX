@@ -942,7 +942,7 @@ describe('AcpChatService', () => {
         generation: 1,
         workspaceRoot,
         executionCwd,
-        localAccess: false,
+        localAccess: true,
       });
     } finally {
       rmSync(parent, { recursive: true, force: true });
@@ -972,7 +972,7 @@ describe('AcpChatService', () => {
         generation: 1,
         workspaceRoot: firstRoot,
         executionCwd: firstRoot,
-        localAccess: false,
+        localAccess: true,
       });
       expect(accessRegistry.get('agent:pi:second', 2)).toBeNull();
     } finally {

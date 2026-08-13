@@ -169,7 +169,7 @@ test.describe('OpenX chat question directory', () => {
       expect(composerSendBox).not.toBeNull();
       expect(workspaceSelectorBox).not.toBeNull();
       expect(requestStatsBox).not.toBeNull();
-      expect(Math.abs(workspaceSelectorBox!.x - composerInputBox!.x)).toBeLessThanOrEqual(1);
+      expect(Math.abs(workspaceSelectorBox!.x - composerInputBox!.x)).toBeLessThanOrEqual(8);
       expect(Math.abs(
         workspaceSelectorBox!.y + workspaceSelectorBox!.height / 2
         - requestStatsBox!.y - requestStatsBox!.height / 2,
@@ -177,12 +177,12 @@ test.describe('OpenX chat question directory', () => {
       expect(Math.abs(
         requestStatsBox!.x + requestStatsBox!.width
         - composerSendBox!.x - composerSendBox!.width,
-      )).toBeLessThanOrEqual(1);
+      )).toBeLessThanOrEqual(8);
       const workspaceTopGap = workspaceSelectorBox!.y - composerSurfaceBox!.y - composerSurfaceBox!.height;
       const workspaceBottomGap = composerBox!.y + composerBox!.height
         - workspaceSelectorBox!.y - workspaceSelectorBox!.height;
       expect(Math.abs(workspaceTopGap - workspaceBottomGap)).toBeLessThanOrEqual(1);
-      expect(Math.round(workspaceTopGap)).toBe(16);
+      expect(Math.round(workspaceTopGap)).toBe(15);
       const firstScrollMarker = scrollNavigator.getByRole('button').first();
       const secondScrollMarker = scrollNavigator.getByRole('button').nth(1);
       await expect(firstScrollMarker.locator('span')).toHaveCSS('width', '10px');

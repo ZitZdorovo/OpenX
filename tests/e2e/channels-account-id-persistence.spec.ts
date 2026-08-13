@@ -11,6 +11,8 @@ function stableStringify(value: unknown): string {
 
 test.describe('Channels account editor behavior', () => {
   test('keeps Feishu credentials when account ID is changed', async ({ electronApp, page }) => {
+    await completeSetup(page);
+
     await installIpcMocks(electronApp, {
       gatewayStatus: { state: 'running', port: 18789, pid: 12345 },
       hostApi: {
@@ -54,8 +56,7 @@ test.describe('Channels account editor behavior', () => {
       },
     });
 
-    await completeSetup(page);
-    await page.getByTestId('sidebar-nav-channels').click();
+    await page.evaluate(() => { window.location.hash = '/channels'; });
     await expect(page.getByTestId('channels-page')).toBeVisible();
 
     const addAccountButton = page.locator('button').filter({

@@ -3,7 +3,7 @@ id: remote-client-ux-regressions
 title: Fix remote-client onboarding, workspace, attachment, and navigation regressions
 scenario: gateway-backend-communication
 taskType: runtime-bridge
-intent: Keep remote Gateway paths remote, deliver desktop attachments by value, and make the reported first-run, settings, chat, model, and agent interactions behave consistently.
+intent: Preserve remote Gateway paths, allow existing personal desktop paths, deliver staged attachments by value, and make the reported first-run, settings, chat, model, and agent interactions behave consistently.
 touchedAreas:
   - electron/main/**
   - electron/services/**
@@ -44,13 +44,13 @@ requiredTests:
   - pnpm run typecheck
   - pnpm run lint:check
   - pnpm exec vitest run tests/unit/acp-session-access-registry.test.ts tests/unit/acp-chat-service.test.ts tests/unit/chat-acp-page.test.tsx tests/unit/chat-input.test.tsx tests/unit/agents-page.test.tsx tests/unit/editing-context-menu.test.ts tests/unit/i18n-locale-parity.test.ts
-  - pnpm exec playwright test tests/e2e/remote-gateway-setup.spec.ts tests/e2e/main-navigation.spec.ts tests/e2e/chat-workspace-context.spec.ts tests/e2e/scrollbar-visibility.spec.ts
+  - pnpm exec playwright test tests/e2e/remote-gateway-setup.spec.ts tests/e2e/main-navigation.spec.ts tests/e2e/project-sidebar.spec.ts tests/e2e/chat-acp-attachments.spec.ts tests/e2e/scrollbar-visibility.spec.ts
   - pnpm run comms:replay
   - pnpm run comms:compare
   - pnpm run build:vite
 acceptance:
   - A remote cwd is never canonicalized, statted, or rejected against the client filesystem before ACP load or prompt.
-  - A remote-session grant cannot authorize arbitrary client-local attachment paths; only explicitly staged desktop files can cross the boundary.
+  - Personal client sessions permit existing client-local attachment paths while preserving session and generation validation.
   - Non-image staged files use an embedded ACP resource block with bytes, MIME type, safe filename, and staging identity.
   - Native editing menus, settings navigation/search, drag overlay, agent personality, model option colors, and composer spacing have regression coverage.
   - New user-facing strings exist in en, ru, zh, and ja.
@@ -58,6 +58,6 @@ docs:
   required: true
 ---
 
-Remote Gateway workspace paths describe the Gateway host. OpenX may use a matching local path for an explicitly available preview, but local absence must not block opening or sending to a remote chat.
+Remote Gateway workspace paths describe the Gateway host. OpenX uses a matching local path when it exists for a preview, while local absence must not block opening or sending to a remote chat.
 
 Desktop attachments cross the remote boundary by content. A local staging path is authorization evidence inside Electron Main, not a path that the remote agent is expected to open.

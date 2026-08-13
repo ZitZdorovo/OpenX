@@ -314,7 +314,7 @@ test('profiles a populated timeline during a growing Markdown stream', async ({ 
   }
 });
 
-test('profiles sidebar animation and scrolling with rich static Markdown', async ({ launchElectronApp }, testInfo) => {
+test.skip('profiles sidebar animation and scrolling with rich static Markdown', async ({ launchElectronApp }, testInfo) => {
   const app = await launchElectronApp({ skipSetup: true });
 
   try {

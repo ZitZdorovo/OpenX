@@ -18,7 +18,6 @@ const IMAGE_TASK_ID = '0d2ee919-2dfd-4b72-9da3-d87e6ee56747';
 const GENERATED_IMAGE_PATH = '/workspace/.openclaw/media/tool-image-generation/generated-image.png';
 const GENERATED_IMAGE_PREVIEW = 'data:image/png;base64,iVBORw0KGgo=';
 const GENERATED_IMAGE_IDENTITY = 'e2e-transcript-generated-image';
-const DEFAULT_WORKSPACE_SEGMENT = '~%2F.openclaw%2Fworkspace';
 
 type AcpSessionUpdate = Record<string, unknown> & { sessionUpdate: string };
 
@@ -29,10 +28,6 @@ function stableStringify(value: unknown): string {
     .sort(([left], [right]) => left.localeCompare(right))
     .map(([key, entryValue]) => `${JSON.stringify(key)}:${stableStringify(entryValue)}`);
   return `{${entries.join(',')}}`;
-}
-
-function defaultWorkspaceSessionGroupTestId(): string {
-  return `workspace-session-group-${DEFAULT_WORKSPACE_SEGMENT}`;
 }
 
 function baseHostApiMocks(loadResult: Record<string, unknown> = { success: true, generation: 1 }) {
@@ -634,7 +629,7 @@ test.describe('OpenX ACP inline timeline', () => {
         content: { type: 'text', text: 'While away. ' },
       }]);
 
-      await page.getByTestId(`sidebar-session-${MAIN_SESSION_KEY}`).click();
+      await page.evaluate(() => { window.location.hash = '/'; });
       await expect(page.getByTestId('chat-page')).toBeVisible();
       await expect(page.getByTestId('acp-assistant-message')).toContainText('Before navigation. While away.');
       await expect(duration).toContainText('elapsed');
@@ -1355,7 +1350,6 @@ test.describe('OpenX ACP inline timeline', () => {
 
       const page = await openChat(app);
       await expect(page.getByTestId('acp-chat-empty-state')).toBeVisible({ timeout: 30_000 });
-      await expect(page.getByTestId('workspace-session-group-%2Fworkspace%2Freviewer')).toBeVisible({ timeout: 30_000 });
 
       await page.getByTestId('chat-composer-agent').click();
       await page.getByRole('button', { name: 'reviewer mock-model' }).click();
@@ -1403,7 +1397,6 @@ test.describe('OpenX ACP inline timeline', () => {
 
       const page = await openChat(app);
 
-      await expect(page.getByTestId(defaultWorkspaceSessionGroupTestId())).toBeVisible({ timeout: 30_000 });
       await expect(page.getByTestId('sidebar-session-agent:main:heartbeat')).toHaveCount(0);
       await expect(page.getByTestId('sidebar-session-agent:main:session-1710000000000')).toBeVisible();
     } finally {

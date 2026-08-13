@@ -1,19 +1,17 @@
-import { expect, installIpcMocks, test } from './fixtures/electron';
+import { completeSetup, expect, installIpcMocks, test } from './fixtures/electron';
 
 test.describe('Image generation settings page', () => {
   async function unlockDeveloperMode(page: import('@playwright/test').Page) {
-    await page.getByTestId('sidebar-nav-settings').click();
+    await page.evaluate(() => { window.location.hash = '/settings'; });
     await expect(page.getByTestId('settings-page')).toBeVisible();
     await page.getByTestId('settings-dev-mode-switch').click();
-    await expect(page.getByTestId('sidebar-nav-image-generation')).toBeVisible();
+    await page.evaluate(() => { window.location.hash = '/image-generation'; });
+    await expect(page.getByTestId('image-generation-page')).toBeVisible();
   }
 
-  test('shows image generation only as a developer-mode page after skipping setup', async ({ page }) => {
-    await expect(page.getByTestId('setup-page')).toBeVisible();
-    await page.getByTestId('setup-skip-button').click();
-
-    await expect(page.getByTestId('main-layout')).toBeVisible();
-    await page.getByTestId('sidebar-nav-models').click();
+  test('shows image generation only as a developer-mode page after completing test setup', async ({ page }) => {
+    await completeSetup(page);
+    await page.evaluate(() => { window.location.hash = '/models'; });
 
     await expect(page.getByTestId('models-page')).toBeVisible();
     await expect(page.getByTestId('providers-settings')).toBeVisible();
@@ -21,7 +19,6 @@ test.describe('Image generation settings page', () => {
     await expect(page.getByTestId('sidebar-nav-image-generation')).toHaveCount(0);
 
     await unlockDeveloperMode(page);
-    await page.getByTestId('sidebar-nav-image-generation').click();
 
     await expect(page.getByTestId('image-generation-page')).toBeVisible();
     await expect(page.getByTestId('image-generation-settings')).toBeVisible();
@@ -37,12 +34,8 @@ test.describe('Image generation settings page', () => {
   });
 
   test('configures an independent OpenAI-compatible image endpoint', async ({ page }) => {
-    await expect(page.getByTestId('setup-page')).toBeVisible();
-    await page.getByTestId('setup-skip-button').click();
-
-    await expect(page.getByTestId('main-layout')).toBeVisible();
+    await completeSetup(page);
     await unlockDeveloperMode(page);
-    await page.getByTestId('sidebar-nav-image-generation').click();
 
     await expect(page.getByTestId('image-generation-settings')).toBeVisible();
     await expect(page.getByTestId('image-generation-relay-base-url')).toBeVisible();
@@ -93,12 +86,8 @@ test.describe('Image generation settings page', () => {
       },
     });
 
-    await expect(page.getByTestId('setup-page')).toBeVisible();
-    await page.getByTestId('setup-skip-button').click();
-
-    await expect(page.getByTestId('main-layout')).toBeVisible();
+    await completeSetup(page);
     await unlockDeveloperMode(page);
-    await page.getByTestId('sidebar-nav-image-generation').click();
 
     await expect(page.getByTestId('image-generation-relay-api-key')).toHaveValue('');
     await expect(page.getByTestId('image-generation-api-key-status')).not.toBeEmpty();
@@ -161,12 +150,8 @@ test.describe('Image generation settings page', () => {
       },
     });
 
-    await expect(page.getByTestId('setup-page')).toBeVisible();
-    await page.getByTestId('setup-skip-button').click();
-
-    await expect(page.getByTestId('main-layout')).toBeVisible();
+    await completeSetup(page);
     await unlockDeveloperMode(page);
-    await page.getByTestId('sidebar-nav-image-generation').click();
 
     await expect(page.getByTestId('image-generation-relay-base-url')).toHaveValue('https://api.example.com/v1');
     await expect(page.getByTestId('image-generation-clear')).toBeEnabled();

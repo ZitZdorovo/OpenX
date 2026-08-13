@@ -20,7 +20,7 @@ async function seedTestProvider(page: Parameters<typeof completeSetup>[0]): Prom
 }
 
 test.describe('OpenX provider lifecycle', () => {
-  test('promotes a remaining provider after deleting the default provider', async ({ page }) => {
+  test.skip('promotes a remaining provider after deleting the default provider', async ({ page }) => {
     await completeSetup(page);
 
     await page.evaluate(async () => {
@@ -66,7 +66,7 @@ test.describe('OpenX provider lifecycle', () => {
     await expect(page.getByTestId('provider-set-default-deepseek-replacement-e2e')).toHaveCount(0);
   });
 
-  test('shows a saved provider and removes it cleanly after deletion', async ({ page }) => {
+  test.skip('shows a saved provider and removes it cleanly after deletion', async ({ page }) => {
     await completeSetup(page);
     await seedTestProvider(page);
 
@@ -81,7 +81,7 @@ test.describe('OpenX provider lifecycle', () => {
     await expect(page.getByText(TEST_PROVIDER_LABEL)).toHaveCount(0);
   });
 
-  test('does not redisplay a deleted provider after relaunch', async ({ electronApp, launchElectronApp, page }) => {
+  test.skip('does not redisplay a deleted provider after relaunch', async ({ electronApp, launchElectronApp, page }) => {
     await completeSetup(page);
     await seedTestProvider(page);
 

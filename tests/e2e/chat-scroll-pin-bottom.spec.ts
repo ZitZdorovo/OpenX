@@ -170,7 +170,9 @@ test.describe('OpenX chat scroll pin-to-bottom during runs', () => {
       await expect(page.getByTestId('chat-composer-input')).toBeEnabled({ timeout: 30_000 });
       await scrollContainer.evaluate((el) => {
         const element = el as HTMLElement;
+        element.scrollTo({ top: 0, behavior: 'instant' });
         element.scrollTop = 0;
+        element.dispatchEvent(new WheelEvent('wheel', { deltaY: -500, bubbles: true }));
         element.dispatchEvent(new Event('scroll', { bubbles: true }));
       });
       await expect(page.getByTestId('chat-scroll-to-latest')).toBeVisible();
@@ -207,7 +209,9 @@ test.describe('OpenX chat scroll pin-to-bottom during runs', () => {
       // and surface the "scroll to latest" affordance.
       await scrollContainer.evaluate((el) => {
         const element = el as HTMLElement;
+        element.scrollTo({ top: 0, behavior: 'instant' });
         element.scrollTop = 0;
+        element.dispatchEvent(new WheelEvent('wheel', { deltaY: -500, bubbles: true }));
         element.dispatchEvent(new Event('scroll', { bubbles: true }));
       });
 

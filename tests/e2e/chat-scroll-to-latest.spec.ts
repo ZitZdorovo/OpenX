@@ -117,7 +117,9 @@ test.describe('OpenX chat scroll-to-latest affordance', () => {
 
       const scrollContainer = page.getByTestId('chat-scroll-container');
       await scrollContainer.evaluate((element) => {
+        element.scrollTo({ top: 0, behavior: 'instant' });
         element.scrollTop = 0;
+        element.dispatchEvent(new WheelEvent('wheel', { deltaY: -500, bubbles: true }));
         element.dispatchEvent(new Event('scroll', { bubbles: true }));
       });
 

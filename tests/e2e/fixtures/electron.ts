@@ -338,7 +338,36 @@ export const test = base.extend<ElectronFixtures>({
 
 export async function completeSetup(page: Page): Promise<void> {
   await expect(page.getByTestId('setup-page')).toBeVisible();
-  await page.getByTestId('setup-skip-button').click();
+  await page.evaluate(async () => {
+    const response = await window.openx?.hostInvoke({
+      id: `e2e-setup-${Date.now()}`,
+      module: 'settings',
+      action: 'set',
+      payload: { key: 'setupComplete', value: true },
+    });
+    if (!response?.ok) throw new Error(response?.error?.message || 'Failed to complete E2E setup');
+    const saved = await window.openx?.hostInvoke({
+      id: `e2e-setup-verify-${Date.now()}`,
+      module: 'settings',
+      action: 'getAll',
+    });
+    if (!saved?.ok || !(saved.data as { setupComplete?: boolean } | undefined)?.setupComplete) {
+      throw new Error('E2E setup completion was not persisted');
+    }
+  });
+  const target = new URL(page.url());
+  target.hash = '/';
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    target.searchParams.set('e2e-setup', `${Date.now()}-${attempt}`);
+    await page.goto(target.href, { waitUntil: 'domcontentloaded' });
+    try {
+      await expect(page.getByTestId('main-layout')).toBeVisible({ timeout: 5_000 });
+      return;
+    } catch {
+      // Electron can briefly abandon a file:// reload while the setup route is
+      // replacing itself. A fresh document URL makes the transition reliable.
+    }
+  }
   await expect(page.getByTestId('main-layout')).toBeVisible();
 }
 
@@ -918,13 +947,14 @@ export async function installAttachmentHostFixture(
         });
         productionSessionAccess.commitGrant(grant);
         const replay = state.replays[sessionKey] ?? [];
-        state.replayReady[sessionKey] = new Promise((resolveReplay) => {
-          setTimeout(() => {
-            emitUpdates(sessionKey, generation, true, replay);
-            resolveReplay();
-          }, 0);
-        });
-        return respond(request.id, { success: true, generation });
+        const sessionUpdates = replay.map((update) => ({
+          sessionKey,
+          generation,
+          historical: true,
+          notification: { sessionId: sessionKey, update },
+        }));
+        state.replayReady[sessionKey] = Promise.resolve();
+        return respond(request.id, { success: true, generation, sessionUpdates });
       }
       if (request.module === 'chat' && request.action === 'sendAcpPrompt') {
         const sessionKey = String(request.payload?.sessionKey ?? '');

@@ -11,8 +11,12 @@ async function ensureSwitchState(toggle: Locator, checked: boolean): Promise<voi
 
 async function readProxyEnabled(page: Page): Promise<boolean> {
   return await page.evaluate(async () => {
-    const settings = await window.electron.ipcRenderer.invoke('settings:getAll');
-    return Boolean(settings?.proxyEnabled);
+    const response = await window.openx?.hostInvoke({
+      id: `proxy-read-${Date.now()}`,
+      module: 'settings',
+      action: 'getAll',
+    });
+    return Boolean((response?.data as { proxyEnabled?: boolean } | undefined)?.proxyEnabled);
   });
 }
 
@@ -26,6 +30,7 @@ test.describe('OpenX developer proxy settings', () => {
     const devModeToggle = page.getByTestId('settings-dev-mode-switch');
     await expect(devModeToggle).toBeVisible();
     await ensureSwitchState(devModeToggle, true);
+    await page.getByTestId('settings-nav-developer').click();
 
     const proxySection = page.getByTestId('settings-proxy-section');
     const proxyToggle = page.getByTestId('settings-proxy-toggle');
