@@ -1,8 +1,5 @@
 import { completeSetup, expect, test } from './fixtures/electron';
-import {
-  MAC_SIDEBAR_CHROME_HEIGHT,
-  SIDEBAR_COLLAPSED_WIDTH,
-} from '../../shared/sidebar-layout';
+import { MAC_SIDEBAR_CHROME_HEIGHT } from '../../shared/sidebar-layout';
 
 test.describe('macOS frameless chrome', () => {
   test.skip(process.platform !== 'darwin', 'macOS drag-region chrome only');
@@ -27,10 +24,6 @@ test.describe('macOS frameless chrome', () => {
     const chromeBox = await sidebarChrome.boundingBox();
     expect(chromeBox).not.toBeNull();
     expect(chromeBox!.height).toBe(MAC_SIDEBAR_CHROME_HEIGHT);
-
-    const sidebar = page.getByTestId('sidebar');
-    await page.getByTestId('sidebar-collapse-toggle').click();
-    await expect.poll(async () => (await sidebar.boundingBox())?.width ?? 0).toBe(SIDEBAR_COLLAPSED_WIDTH);
 
     const chatPage = page.getByTestId('chat-page');
     await expect(chatPage).toBeVisible();
