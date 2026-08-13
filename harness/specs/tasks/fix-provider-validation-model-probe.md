@@ -16,8 +16,6 @@ touchedAreas:
   - tests/unit/host-services.test.ts
   - tests/e2e/provider-lifecycle.spec.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Adding or updating a provider validates the API key with the model ID currently configured in the form.
   - Plan-specific OpenAI-compatible endpoints no longer receive the fabricated validation-probe model.

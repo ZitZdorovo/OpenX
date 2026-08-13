@@ -18,9 +18,6 @@ touchedAreas:
   - tests/unit/**
   - tests/e2e/**
   - README.md
-  - README.ru-RU.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Pairing approval is an amber waiting state rather than a red connection failure.
   - Editable fields expose the native spelling and clipboard context menu.

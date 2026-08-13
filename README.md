@@ -1,545 +1,111 @@
+<div align="center">
 
-<h1 align="center">OpenX</h1>
+# OpenX
 
-<p align="center">
-  <strong>The Desktop Interface for OpenClaw AI Agents</strong>
-</p>
+**Независимый desktop-клиент для удалённого OpenClaw Gateway**
 
-<p align="center">
-  <a href="#features">Features</a> •
-  <a href="#why-openx">Why OpenX</a> •
-  <a href="#getting-started">Getting Started</a> •
-  <a href="#architecture">Architecture</a> •
-  <a href="#development">Development</a> •
-  <a href="#contributing">Contributing</a>
-</p>
+[![Check and Build](https://github.com/ZitZdorovo/OpenX/actions/workflows/check.yml/badge.svg)](https://github.com/ZitZdorovo/OpenX/actions/workflows/check.yml)
+[![Electron E2E](https://github.com/ZitZdorovo/OpenX/actions/workflows/electron-e2e.yml/badge.svg)](https://github.com/ZitZdorovo/OpenX/actions/workflows/electron-e2e.yml)
+[![Release](https://github.com/ZitZdorovo/OpenX/actions/workflows/release.yml/badge.svg)](https://github.com/ZitZdorovo/OpenX/actions/workflows/release.yml)
+[![GitHub release](https://img.shields.io/github/v/release/ZitZdorovo/OpenX?display_name=tag&sort=semver)](https://github.com/ZitZdorovo/OpenX/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-2ea44f.svg)](LICENSE)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/platform-MacOS%20%7C%20Windows%20%7C%20Linux-blue" alt="Platform" />
-  <img src="https://img.shields.io/badge/electron-40+-47848F?logo=electron" alt="Electron" />
-  <img src="https://img.shields.io/badge/react-19-61DAFB?logo=react" alt="React" />
-  <a href="https://discord.com/invite/84Kex3GGAh" target="_blank">
-  <img src="https://img.shields.io/discord/1399603591471435907?logo=discord&labelColor=%20%235462eb&logoColor=%20%23f5f5f5&color=%20%235462eb" alt="chat on Discord" />
-  </a>
-  <img src="https://img.shields.io/github/downloads/ValueCell-ai/OpenX/total?color=%23027DEB" alt="Downloads" />
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="License" />
-</p>
+[Возможности](#возможности) · [Быстрый старт](#запуск-для-разработки) · [Сборка](#сборка) · [Архитектура](#архитектура) · [Безопасность](#безопасность)
 
-<p align="center">
-  English | <a href="README.zh-CN.md">简体中文</a> | <a href="README.ja-JP.md">日本語</a> | <a href="README.ru-RU.md">Русский</a>
-</p>
+</div>
 
----
+OpenX — кроссплатформенный Electron-клиент для удалённого [OpenClaw Gateway](https://docs.openclaw.ai). Приложение предоставляет интерфейс для чатов, агентов, моделей, каналов, навыков и задач Cron, не подменяя серверную часть OpenClaw.
 
-## Remote Gateway client mode
+> OpenX подключается к уже работающему Gateway по `ws://` или `wss://`. Клиент не устанавливает, не запускает, не перезапускает и не восстанавливает Gateway на локальной машине.
 
-OpenX is a standalone external client for an OpenClaw Gateway that is already running elsewhere. OpenX never starts, supervises, repairs, restarts, or terminates a Gateway process. On first launch, enter a `ws://` or `wss://` endpoint and select token or password authentication; the secret is encrypted with Electron `safeStorage` and is not returned to the renderer or written to normal settings. Cron jobs, Channels, Skills, sessions, models, context metadata, and provider usage are hydrated from the connected Gateway after authentication.
+## Возможности
 
-The Gateway host must include `https://openx.invalid` in `gateway.controlUi.allowedOrigins`. OpenX sends that stable, non-routable Origin on its WebSocket upgrade so access can be granted explicitly without using a wildcard.
+- чаты с потоковыми ответами, инструментами и вложениями;
+- организация сессий по проектам и вложенным папкам;
+- выбор агента и модели непосредственно в чате;
+- управление удалёнными агентами, каналами, навыками и Cron-задачами;
+- безопасное хранение токена или пароля через Electron `safeStorage`;
+- автоматические обновления через [GitHub Releases](https://github.com/ZitZdorovo/OpenX/releases);
+- светлая и тёмная темы;
+- интерфейс на английском и русском языках.
 
-Chats are organized locally as **Projects → nested folders → chats**, with a separate collapsible pinned section. A project binds chat context to a local working directory selected with the operating-system folder picker. Cron, Channels, Skills, sessions, and configuration are available only while the remote Gateway is connected. The bundled OpenClaw command is retained solely for the ACP stdio-to-WebSocket bridge; it is not used to host a local Gateway.
+## Требования
 
-Session working-directory paths belong to the Gateway host and do not need to exist on the OpenX desktop. Files selected on the desktop are embedded into the ACP request, so remote agents receive the file contents rather than an unusable client-local staging path.
+- Windows, macOS или Linux;
+- Node.js 24;
+- pnpm версии, указанной в `package.json`;
+- доступный OpenClaw Gateway и данные для авторизации.
 
-### OmniRoute subscription limits
-
-Open **Settings → Gateway → OmniRoute limits** to show the real subscription windows cached by OmniRoute. The chat panel resolves the upstream connection used by the latest successful request and shows only that account's 5-hour and weekly windows for the active family (Gemini, Claude, or ChatGPT/Codex). Gemini and Claude stay in separate pools. If OmniRoute omits one period, OpenX keeps the period that was returned and marks the missing one instead of fabricating a value. Core quota, provider-catalog, and active-account lookups use independent timeouts; a slow optional lookup cannot discard a valid cached quota response. Deleted-connection caches and internal connection ids are not shown. Enter the OmniRoute management origin (normally `http://127.0.0.1:20128`) and an API key with the `manage` scope. The key is encrypted with Electron `safeStorage`; Renderer receives only normalized percentages, account labels, and reset times. If OmniRoute runs on the remote Gateway host, expose it only through a trusted VPN/SSH tunnel or install a Gateway-side bridge—remote `localhost` is not the desktop's `localhost`.
-
-While connected, OpenX also registers a second authenticated `node-host` WebSocket using the same device identity. OpenClaw agents can discover the client as an OpenClaw Node and invoke its declared `openx.*` commands (window focus/navigation and the same project, folder, rename, move, and pin handlers used by the UI). OpenX adds only those declared commands to `gateway.nodes.allowCommands`; it does not expose arbitrary local shell execution.
-
-OpenClaw protocol references: [Gateway protocol](https://github.com/openclaw/openclaw/blob/main/docs/gateway/protocol.md), [remote access](https://docs.openclaw.ai/gateway/remote), and [ACP](https://docs.openclaw.ai/cli/acp).
-
----
-
-## Overview
-
-**OpenX** is a remote desktop interface for an existing [OpenClaw](https://github.com/OpenClaw) runtime—no local Gateway lifecycle is required.
-
-Whether you're automating workflows, managing AI-powered channels, or scheduling intelligent tasks, OpenX provides the interface you need to harness AI agents effectively.
-
-OpenX comes pre-configured with best-practice model providers and natively supports Windows as well as multi-language settings. Of course, you can also fine-tune advanced configurations via **Settings → Advanced → Developer Mode**.
-
-<p align="center"><strong style="font-size:1.1em; text-decoration: underline;">For a full enterprise edition, dedicated service support, or tailored deployment guidance for your business scenario, contact us at <a href="mailto:public@valuecell.ai">public@valuecell.ai</a>.</strong></p>
-
----
-## Screenshot
-
-<p align="center">
-  <img src="resources/screenshot/en/chat.png" style="width: 100%; height: auto;">
-</p>
-
-<p align="center">
-  <img src="resources/screenshot/en/cron.png" style="width: 100%; height: auto;">
-</p>
-
-<p align="center">
-  <img src="resources/screenshot/en/skills.png" style="width: 100%; height: auto;">
-</p>
-
-<p align="center">
-  <img src="resources/screenshot/en/channels.png" style="width: 100%; height: auto;">
-</p>
-
-<p align="center">
-  <img src="resources/screenshot/en/models.png" style="width: 100%; height: auto;">
-</p>
-
-<p align="center">
-  <img src="resources/screenshot/en/settings.png" style="width: 100%; height: auto;">
-</p>
-
----
-
-## Why OpenX
-
-Building AI agents shouldn't require mastering the command line. OpenX was designed with a simple philosophy: **powerful technology deserves an interface that respects your time.**
-
-| Challenge | OpenX Solution |
-|-----------|----------------|
-| Remote setup | Gateway URL plus token/password sign-in |
-| Configuration | Remote Gateway RPC with conflict-safe writes |
-| Process management | No local Gateway process ownership |
-| App updates | Startup update checks with a prompt before downloading or installing |
-| Multiple AI providers | Unified provider configuration panel |
-| Skills and plugins | Managed through the connected Gateway |
-
-### OpenClaw connection
-
-OpenX connects to an existing official **OpenClaw** Gateway. The embedded OpenClaw package is used only to provide the ACP stdio bridge for chat sessions; the Gateway itself is always external.
-
-We are committed to maintaining strict alignment with the upstream OpenClaw project, ensuring that you always have access to the latest capabilities, stability improvements, and ecosystem compatibility provided by the official releases.
-
----
-
-## Features
-
-### 🎯 Zero Configuration Barrier
-Complete the entire setup—from installation to your first AI interaction—through an intuitive graphical interface. No terminal commands, no YAML files, no environment variable hunting.
-
-### 💬 Intelligent Chat Interface
-Communicate with AI agents through a modern chat experience. Support for multiple conversation contexts, message history, assistant replies rendered as streaming Markdown with syntax-highlighted fenced code, CJK-aware parsing, GitHub-flavored tables, and KaTeX-powered LaTeX math (`$inline$`, `$$block$$`, `\(inline\)`, and `\[block\]`) while user input remains literal text, and direct `@agent` routing in the main composer for multi-agent setups. Fenced code preserves source line breaks, soft-wraps long lines, and provides a localized copy action after streaming completes.
-Skills you insert from the composer appear as `/skill-name` chips; click a chip to open the preview sidebar and read that skill's `SKILL.md`.
-When you target another agent with `@agent`, OpenX switches into that agent's own conversation context directly instead of relaying through the default agent. Agent workspaces stay separate by default, and stronger isolation depends on OpenClaw sandbox settings.
-The sidebar is project-first: projects bind to local folders, may contain nested folders, and hold explicitly moved chats. Pinned chats, folders, and projects live in a separate collapsible section and are not duplicated in their source section. Unassigned remote sessions remain in the session list. Moving a chat updates its OpenClaw working directory; returning it to the session list restores the default workspace. Rows show compact busy, unread, and recent-activity indicators, while rename, pin, move, archive, and delete actions are available from the row menu.
-Each agent can also override its own `provider/model` runtime setting; agents without overrides continue inheriting the global default model.
-
-The Workspace and Preview tabs in Chat's right panel provide read-only previews for Markdown, `.docx`, and `.pptx` files. Markdown file previews use the same syntax-highlighted, soft-wrapped, copyable fenced code, CJK-aware parsing, and KaTeX math support in static rendering mode. The Preview header can expand the selected file to the full OpenX viewport; use the same control or Escape to return to the panel. Legacy `.doc` and `.ppt` files continue to open through the operating system instead of inline. DOCX pagination may differ from Microsoft Word, and PPTX previews do not support animations, transitions, or media playback. Office files larger than 20 MB are not previewed inline.
-
-### Local HTML Preview
-The Chat right panel has Workspace, Preview, and Changes tabs; it no longer includes a general Web Browser, Home page, or address bar. Authorized local `.html` and `.htm` attachments, file activities, and Workspace files open in Preview by default. Their file actions let you choose the built-in Preview or a system application, and the Preview header can open the current HTML file in the system browser.
-
-All links are non-clickable. Links rendered by OpenX appear as ordinary text, and links inside HTML Preview have their styling and pointer interaction removed. HTML Preview also blocks forms, script navigation, redirects, hash navigation, popups, downloads, network requests, and device permissions. It can render self-contained local HTML but cannot leave the selected document.
-
-### 📡 Multi-Channel Management
-Configure and monitor multiple AI channels simultaneously. Each channel operates independently, allowing you to run specialized agents for different tasks.
-Each channel now supports multiple accounts, per-account agent binding, and switching the channel default account directly from the Channels page.
-For custom channel account IDs, OpenX enforces OpenClaw-compatible canonical IDs (`[a-z0-9_-]`, lowercase, max 64 chars, must start with a letter/number) to prevent routing mismatches.
-OpenX now also bundles Tencent's official personal WeChat channel plugin, so you can link WeChat directly from the Channels page with an in-app QR flow.
-
-### ⏰ Cron-Based Automation
-Schedule AI tasks to run automatically. Define triggers, set intervals, and let your AI agents work around the clock without manual intervention.
-The Cron page now lets you configure external delivery directly in the task form with separate sender-account and recipient-target selectors. For supported channels, recipient targets are discovered automatically from channel directories or known session history, so you no longer need to edit `jobs.json` by hand. The task message field also supports inserting skills with the same inline `/skill` token syntax as the main chat composer (scoped to the selected agent), so scheduled prompts can trigger skills directly. The schedule picker is split into **Recurring** and **Once** tabs: Recurring offers Hourly, Daily, Weekdays, Weekly, and Custom (raw cron) frequencies with inline time/weekday controls, while Once runs the task a single time at a chosen date (with weekday shown) and time. One-time tasks must be scheduled for a future moment and are automatically removed by the runtime once they finish.
-
-
-### 🧩 Extensible Skill System
-Extend agents with skills exposed by the connected OpenClaw Gateway. The Skills page loads, enables, disables, and configures skills through the remote contract and is unavailable while disconnected. OpenX does not maintain a competing local skill state.
-
-### 🔐 Secure Provider Integration
-Connect to multiple AI providers (OpenAI, Anthropic, Z.AI / GLM, and more) with credentials stored securely in your system's native keychain. OpenAI supports both API key and browser OAuth (Codex subscription) sign-in.
-In developer mode, the dedicated Image Generation page supports an independent OpenAI-compatible image-generation endpoint (Base URL, API key, and model name such as `gpt-image-2`) so image generation can use a dedicated `/v1/images/generations` service while chat continues using the normal OpenAI provider.
-For **Custom** providers used with OpenAI-compatible gateways, you can set a custom `User-Agent` in **Settings → AI Providers → Edit Provider** for compatibility-sensitive endpoints.
-When you edit or switch providers, OpenX preserves existing per-model capability metadata such as `input: ["text", "image"]`. Newly selected Custom-provider models use OpenClaw onboarding-compatible image-input inference, with unknown models defaulting to text-only.
-Custom-provider model rows also receive an explicit `contextWindow` (inferred from the model family, e.g. `gpt-5.x` → 272k), and rows saved by older versions are backfilled on startup, so OpenClaw can compact long sessions before they fail with "Context overflow" errors. When you have no compaction config, OpenX seeds `agents.defaults.compaction.mode = "safeguard"` and `reserveTokensFloor = 50000`; rows or configs you authored yourself are never modified (except a missing `reserveTokensFloor` may be backfilled).
-Z.AI (CN / Global) maps to OpenClaw's built-in `zai` provider (`ZAI_API_KEY`). Default model is `glm-5.2`. Use the Code Plan preset for Coding Plan endpoints (`…/api/coding/paas/v4`) or the normal API endpoints (`…/api/paas/v4`); CN and Global are mutually exclusive because they share one OpenClaw runtime key.
-When a compatible gateway rejects `/models` for non-auth reasons, OpenX automatically falls back to a lightweight `/chat/completions` or `/responses` probe using the configured model during API key validation.
-
-### 🌙 Adaptive Theming
-Light mode, dark mode, or system-synchronized themes. OpenX adapts to your preferences automatically.
-
-### 🚀 Startup Launch Control
-In **Settings → General**, you can enable **Launch at system startup** so OpenX starts automatically after login.
-
-### 🔔 Update Prompts
-OpenX can automatically check for new versions on startup. When an update is available, it shows an in-app prompt; downloading and installing only happen after you choose the action.
-
----
-
-## Getting Started
-
-### System Requirements
-
-- **Operating System**: macOS 11+, Windows 10+, or Linux (Ubuntu 20.04+)
-- **Memory**: 4GB RAM minimum (8GB recommended)
-- **Storage**: 1GB available disk space
-
-### Installation
-
-#### Pre-built Releases (Recommended)
-
-Download the latest release for your platform from the [Releases](https://github.com/ValueCell-ai/OpenX/releases) page.
-
-#### Build from Source
+## Запуск для разработки
 
 ```bash
-# Clone the repository
-git clone https://github.com/ValueCell-ai/OpenX.git
+git clone https://github.com/ZitZdorovo/OpenX.git
 cd OpenX
-
-# Initialize the project
 pnpm run init
-
-# Start in development mode
 pnpm dev
 ```
-### First Launch
 
-When you launch OpenX for the first time, the **Setup Wizard** will guide you through:
+При первом запуске укажите адрес удалённого Gateway и выберите авторизацию по токену или паролю. Секреты остаются в основном процессе Electron и не передаются renderer-процессу.
 
-1. **Language & Region** – Configure your preferred locale
-2. **AI Provider** – Add providers with API keys or OAuth (for providers that support browser/device login)
-3. **Skill Bundles** – Select pre-configured skills for common use cases
-4. **Verification** – Test your configuration before entering the main interface
-
-The wizard preselects your system language when it is supported, and falls back to English otherwise.
-
-> Web search note: OpenX disables OpenClaw's general-purpose `web_search` tool at both the agent and Gateway policy layers.
-> This includes Moonshot (Kimi) search; managed browser automation and `web_fetch` remain available.
-
-### Proxy Settings
-
-OpenX includes built-in proxy settings for environments where Electron, the OpenClaw Gateway, or channels such as Telegram need to reach the internet through a local proxy client.
-
-Open **Settings → Gateway → Proxy** and configure:
-
-- **Proxy Server**: the default proxy for all requests
-- **Bypass Rules**: hosts that should connect directly, separated by semicolons, commas, or new lines
-- In **Developer Mode**, you can optionally override:
-  - **HTTP Proxy**
-  - **HTTPS Proxy**
-  - **ALL_PROXY / SOCKS**
-
-Recommended local examples:
-
-```text
-Proxy Server: http://127.0.0.1:7890
-```
-Notes:
-
-- A bare `host:port` value is treated as HTTP.
-- If advanced proxy fields are left empty, OpenX falls back to `Proxy Server`.
-- Saving proxy settings reapplies Electron networking and reconnects the client; it never restarts the remote Gateway.
-- OpenX also syncs the proxy to OpenClaw's Telegram channel config when Telegram is enabled.
-- Existing Telegram channel proxy settings are preserved unless the user explicitly changes them.
-- To explicitly clear Telegram channel proxy from OpenClaw config, save proxy settings with proxy disabled.
-- In **Settings → Advanced → Developer**, you can run **OpenClaw Doctor** to execute `openclaw doctor --json` and inspect the diagnostic output without leaving the app.
-- On packaged Windows builds, the bundled `openclaw` ACP bridge and CLI run through Electron's Node mode; OpenX does not ship a second `node.exe` runtime.
-
----
-
-## Architecture
-
-OpenX employs a **dual-process architecture** with a unified host API layer. Renderer talks only to the typed host API. Electron Main owns the authenticated remote WebSocket, reconnect/backoff, Gateway RPC, configuration delivery, OS keychain integration, and restricted OpenClaw Node registration.
-
-Electron Main reads the authoritative `config.get` snapshot and commits conflict-safe changes with `config.set`. There is no local JSON5 fallback and no Gateway process ownership. When the remote host is unavailable, Gateway-dependent pages show a disconnected state instead of operating against stale local data.
-
-Chat uses an ACP stdio bridge owned by Electron Main. Renderer receives typed host events and renders an in-memory ACP timeline. Gateway remains responsible for non-Chat capabilities such as providers, models, skills, workspace, settings, diagnostics, and media configuration.
-
-An unfinished ACP response keeps streaming when you open another conversation or page. Returning before it finishes restores the latest in-memory timeline and continues the live response; once it finishes, normal ACP history replay remains the source of truth.
-
-ACP assistant turns show whole-turn duration. Live timing follows the client-observed prompt lifecycle and survives in-app navigation; historical timing is derived in Electron Main from bounded OpenClaw transcript timestamps and only annotates a turn already restored by ACP replay.
-
-ACP Chat renders standard ACP resources as attachments. User-selected images appear as thumbnails with a filename hover overlay, while other available attachment cards show the filename and a muted, truncating source path. When the current OpenClaw ACP adapter omits assistant media, canonical persisted OpenClaw media facts and explicit assistant `MEDIA:` directives can also be recovered as attachment cards without displaying transcript-only metadata. Existing local file references, including paths outside the active workspace, are revalidated in Electron Main for the exact session and generation before every preview or open. Previewable local attachments produced by the AI, including `.docx` and `.pptx` files within the 20 MB inline-preview limit, keep their primary read-only in-app preview action and provide a secondary menu for opening with compatible applications or revealing the file in Finder, File Explorer, or the system file manager. For local HTML attachments, that menu starts with an action that opens the file in the right-side Preview tab. The same Office limitations apply here: `.doc` and `.ppt` remain system-open formats, DOCX pagination may differ from Microsoft Word, and PPTX animations, transitions, and media playback are unsupported. Compatible-application discovery is available only on macOS and Windows and silently degrades to reveal-only behavior on Linux or when discovery fails. Other local files, including Office files larger than 20 MB, open in the system application after a user click. User-selected folder attachments also remain available after send and open in the system file manager; OpenX does not read or preview their contents. Remote HTTP and HTTPS attachments open externally after a user click. Bare or inline prose paths without canonical media facts are not treated as attachments.
-
-ACP Chat can also display generated image previews when image-generation media is delivered by the runtime as trusted structured media. Trusted OpenClaw internal-UI deliveries and task-correlated final replies preserve the original user-facing completion text, including text-only failure explanations, rather than replacing it with a generic image caption. During historical OpenClaw replay, assistant image `MEDIA:` markers are promoted to the inline image experience only when they follow a recorded image-generation task start for that session. OpenX loads previews through host media handling in Electron Main, not arbitrary Renderer filesystem access. Standard ACP image and resource content remains the preferred path and renders directly.
-
-### ACP File Activity Semantics
-
-- File activity is projected from successful, completed OpenClaw `write`, `edit`, and `apply_patch` calls. Tool recognition follows the official OpenClaw Chat UI; filtering to completed calls is specific to OpenX.
-- Created and modified activity rows use the same file-card shell and **Open with** menu as previewable assistant attachments while retaining their status and optional `+/-` summary. For HTML files, the first menu item opens the file in the right-side Preview tab. Deleted rows keep only the **Changes** action. Every application-list, selected-application, and reveal request is independently revalidated in Electron Main from the workspace root and relative path; tool-derived paths never become attachments or expose canonical native paths to Renderer.
-- A `write` is shown as the tool declares it: a creation with an all-added diff, even if the path may already exist.
-- **Changes** is a chronological, session-level record of tool-declared activity. It is not Git output or a verified diff against a source baseline.
-- For each file, Changes renders at most one diff editor per assistant turn. Sequential fragments are composed when safe; independent fragments share one concatenated editor without claiming a complete-file baseline.
-- Side effects made by shell commands, scripts, users, or IDEs are not detected.
-- A full ACP replay can restore recorded file activity. If replay is incomplete, OpenX does not infer missing activity through fallback behavior.
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│                        OpenX Desktop App                         │
-│                                                                  │
-│  ┌────────────────────────────────────────────────────────────┐  │
-│  │              Electron Main Process                         │  │
-│  │  • Window & application lifecycle management               │  │
-│  │  • Remote Gateway transport and reconnect/backoff           │  │
-│  │  • System integration and OS keychain                       │  │
-│  │  • Auto-update orchestration                               │  │
-│  └────────────────────────────────────────────────────────────┘  │
-│                              │                                   │
-│                              │ IPC (authoritative control plane) │
-│                              ▼                                   │
-│  ┌────────────────────────────────────────────────────────────┐  │
-│  │              React Renderer Process                        │  │
-│  │  • Modern component-based UI (React 19)                    │  │
-│  │  • State management with Zustand                           │  │
-│  │  • Unified host-api/api-client calls                       │  │
-│  │  • Markdown assistant replies, literal user input           │  │
-│  └────────────────────────────────────────────────────────────┘  │
-└──────────────────────────────┬───────────────────────────────────┘
-                               │
-                               │ Typed IPC requests
-                               ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                Main Host Services & Gateway Manager              │
-│                                                                  │
-│  • host:invoke typed service dispatcher                          │
-│  • Settings, files, sessions, skills, providers, diagnostics     │
-│  • Main-owned Gateway WebSocket, RPC and Node connection         │
-└──────────────────────────────┬───────────────────────────────────┘
-                               │
-                               │ Main-owned WebSocket
-                               ▼
-┌──────────────────────────────────────────────────────────────────┐
-│                     OpenClaw Gateway                             │
-│                                                                  │
-│  • AI agent runtime and orchestration                            │
-│  • Message channel management                                    │
-│  • Skill/plugin execution environment                            │
-│  • Provider abstraction layer                                    │
-└──────────────────────────────────────────────────────────────────┘
-```
-### Design Principles
-
-- **Process Isolation**: The AI runtime operates in a separate process, ensuring UI responsiveness even during heavy computation
-- **Single Entry for Frontend Calls**: Renderer requests go through host-api/api-client; protocol details are hidden behind a stable interface
-- **Main-Process Transport Ownership**: Electron Main owns the ACP Chat stdio bridge and Gateway transports; the renderer talks to Main over typed IPC
-- **Extension IPC Contributions**: Main-process extensions contribute host-api actions through the typed IPC registry instead of HTTP routes
-- **Graceful Recovery**: Built-in reconnect, timeout, and backoff logic handles transient failures automatically
-- **Secure Storage**: API keys and sensitive data leverage the operating system's native secure storage mechanisms
-- **CORS-Safe by Design**: The renderer does not call local Gateway or Host API HTTP endpoints directly
-
-### Process Model & Gateway Troubleshooting
-
-- OpenX is an Electron app, so **one app instance normally appears as multiple OS processes** (main/renderer/zygote/utility). This is expected.
-- Single-instance protection uses Electron's lock plus a local process-file lock fallback, preventing duplicate app launch in environments where desktop IPC/session bus is unstable.
-- During rolling upgrades, mixed old/new app versions can still have asymmetric protection behavior. For best reliability, upgrade all desktop clients to the same version.
-- The OpenClaw Gateway listener should still be **single-owner**: only one process should listen on `127.0.0.1:18789`.
-- Gateway readiness is based on OpenClaw core signals such as `system-presence`, `health`, and `status`; memory or channel failures are shown as capability degradation instead of global Gateway failure.
-- To verify the active listener:
-  - macOS/Linux: `lsof -nP -iTCP:18789 -sTCP:LISTEN`
-  - Windows (PowerShell): `Get-NetTCPConnection -LocalPort 18789 -State Listen`
-- Clicking the window close button (`X`) hides OpenX to tray; it does **not** fully quit the app. Use tray menu **Quit OpenX** for complete shutdown.
-
----
-
-## Use Cases
-
-### 🤖 Personal AI Assistant
-Configure a general-purpose AI agent that can answer questions, draft emails, summarize documents, and help with everyday tasks—all from a clean desktop interface.
-
-### 📊 Automated Monitoring
-Set up scheduled agents to monitor news feeds, track prices, or watch for specific events. Results are delivered to your preferred notification channel.
-
-### 💻 Developer Productivity
-Integrate AI into your development workflow. Use agents to review code, generate documentation, or automate repetitive coding tasks.
-
-### 🔄 Workflow Automation
-Chain multiple skills together to create sophisticated automation pipelines. Process data, transform content, and trigger actions—all orchestrated visually.
-
----
-
-## Development
-
-### Prerequisites
-
-- **Node.js**: 22.22.3+, 24.15.0+, or 25.9.0+ within the corresponding supported major line (Node 24 LTS recommended)
-- **Package Manager**: pnpm 9+ (recommended) or npm
-- **Linux (Ubuntu/Debian)**: Install required system libraries before running Electron:
-  ```bash
-  sudo apt-get install -y libnss3 libgtk-3-0 libxss1 libxtst6 libatspi2.0-0 libnotify4 xdg-utils
-  ```
-  On Ubuntu 24.04+, some packages use a `t64` suffix; run the above command and `apt` will automatically select the correct variant.
-
-### Project Structure
-
-```OpenX/
-├── electron/                 # Electron Main Process
-│   ├── services/            # Typed host APIs, provider, secrets and runtime services
-│   │   ├── providers/       # Provider/account model sync logic
-│   │   └── secrets/         # OS keychain and secret storage
-│   ├── shared/              # Shared provider schemas/constants
-│   │   └── providers/
-│   ├── main/                # App entry, windows, IPC registration
-│   ├── gateway/             # Remote Gateway connection and RPC
-│   ├── preload/             # Secure IPC bridge
-│   └── utils/               # Utilities (storage, auth, paths)
-├── src/                      # React Renderer Process
-│   ├── lib/                 # Unified frontend API + error model
-│   ├── stores/              # Zustand stores (settings/chat/gateway)
-│   ├── components/          # Reusable UI components
-│   ├── pages/               # Setup/Dashboard/Chat/Channels/Skills/Cron/Settings
-│   ├── i18n/                # Localization resources
-│   └── types/               # TypeScript type definitions
-├── tests/
-│   ├── e2e/                 # Playwright Electron end-to-end smoke tests
-│   └── unit/                # Vitest unit/integration-like tests
-├── resources/                # Static assets (icons/images)
-└── scripts/                  # Build and utility scripts
-```
-### Available Commands
+## Проверка проекта
 
 ```bash
-# Development
-pnpm run init             # Install dependencies + download bundled binaries (uv, agent-browser)
-pnpm dev                  # Start with hot reload (auto-prepares bundled skills if missing)
-
-# Quality
-pnpm lint                 # Run ESLint
-pnpm typecheck            # TypeScript validation
-
-# Testing
-pnpm test                 # Run unit tests
-pnpm run test:e2e         # Run Electron E2E smoke tests with Playwright
-pnpm run test:e2e:headed  # Run Electron E2E tests with a visible window
-pnpm run perf:chat        # Capture synthetic Chat Renderer/Main CPU profiles
-pnpm run profile:main     # Launch the built app with Main inspector on port 9229
-pnpm run comms:replay     # Compute communication replay metrics
-pnpm run comms:baseline   # Refresh communication baseline snapshot
-pnpm run comms:compare    # Compare replay metrics against baseline thresholds
-
-# Build & Package
-pnpm run build:vite       # Build frontend only
-pnpm build                # Full production build (with compact packaging assets)
-pnpm package              # Build the remote-client runtime for packaging
-pnpm package:mac          # Package for macOS
-pnpm package:win          # Package for Windows
-pnpm package:linux        # Package for Linux
+pnpm run typecheck
+pnpm run lint:check
+pnpm test
+pnpm run test:e2e
+pnpm run harness:ci
 ```
 
-Production packages contain the renderer, Electron Main, and the embedded OpenClaw runtime required by the ACP bridge and CLI. Remote Gateway plugins and skills, local Gateway tooling, development files, source maps, debug symbols, and duplicate extension dependency trees are excluded. The Windows package also omits separate Node, uv, and agent-browser binaries because OpenX neither hosts a local Gateway nor installs local Gateway skills.
-
-On headless Linux, run Electron tests under a display server such as `xvfb-run -a pnpm run test:e2e`.
-
-### Electron Performance Diagnostics
-
-`pnpm run perf:chat` runs isolated synthetic ACP workloads for streaming and for rich static Markdown sidebar/scroll interaction. It writes versioned metrics plus Renderer and Main CPU profiles under the Playwright `test-results/` directory. The Renderer profiles cover the production store/render path and frame pacing. The streaming Main profile measures Main-to-Renderer IPC fanout; the interaction Main profile shows whether Main remains idle while Renderer interactions run. Neither includes the upstream OpenClaw/ACP subprocess or GPU-process paths. Open a CPU profile in Chrome DevTools; the artifacts contain generated fixture text only and are not product telemetry. Results are hardware-dependent, so compare repeated runs on the same machine instead of applying one cross-platform absolute threshold.
-
-For a live Renderer recording, start development with `OPENX_REMOTE_DEBUGGING_PORT=9223 pnpm dev` and attach Playwright or Chrome DevTools to `localhost:9223`. For a live Electron Main recording, run `pnpm run profile:main`, open `chrome://inspect`, configure `localhost:9229`, and select the Electron Main target. Leave `OPENX_GATEWAY_WS_TRACE` unset unless WebSocket tracing itself is being measured.
-
-OpenX leaves Chromium hardware acceleration enabled by default so long documents, scrolling, and layout animations can use GPU compositing and rasterization. Chromium still honors the native `--disable-gpu` command-line switch as a troubleshooting fallback for a machine with a broken graphics driver.
-
-### Communication Regression Checks
-
-When a PR changes communication paths (gateway events, ACP Chat bridge send/receive flow, channel delivery, or transport fallback), run:
+Проверки протокола связи с Gateway:
 
 ```bash
 pnpm run comms:replay
 pnpm run comms:compare
 ```
 
-`comms-regression` in CI enforces required scenarios and threshold checks.
+## Сборка
 
-### Electron E2E Tests
+```bash
+# Windows
+pnpm run package:win
 
-The Playwright Electron suite launches the packaged renderer and main process
-from `dist/` and `dist-electron/`, so it does not require manually running
-`pnpm dev` first.
+# macOS
+pnpm run package:mac
 
-`pnpm run test:e2e` automatically:
+# Linux
+pnpm run package:linux
+```
 
-- builds the renderer and Electron bundles with `pnpm run build:vite`
-- starts Electron in an isolated E2E mode with a temporary `HOME`
-- uses a temporary OpenX `userData` directory
-- skips heavy startup side effects such as gateway auto-start, bundled skill
-  installation, tray creation, and CLI auto-install
+Готовые пакеты создаются в каталоге `release/`. Этот каталог генерируется локально и не хранится в Git.
 
-The first two baseline specs cover:
+## Релизы и обновления
 
-- first-launch setup wizard visibility on a fresh profile
-- skipping setup and navigating to the Models page inside the Electron app
+Workflow `.github/workflows/release.yml` запускается при публикации тега `v*`. Версия тега должна совпадать с `version` в `package.json`.
 
-Add future Electron flows under `tests/e2e/` and reuse the shared fixture in
-`tests/e2e/fixtures/electron.ts`.
-### Tech Stack
+```bash
+pnpm version patch
+```
 
-| Layer | Technology |
-|-------|------------|
-| Runtime | Electron 40+ |
-| UI Framework | React 19 + TypeScript |
-| Styling | Tailwind CSS + shadcn/ui |
-| State | Zustand |
-| Build | Vite + electron-builder |
-| Testing | Vitest + Playwright |
-| Animation | Framer Motion |
-| Icons | Lucide React |
+После успешной сборки GitHub Actions публикует пакеты и update-манифесты в GitHub Releases. Стабильный тег становится последним релизом; версии с суффиксом, например `-beta.1`, публикуются как предварительные.
 
----
+## Архитектура
 
-## Contributing
+```text
+electron/   основной процесс, Gateway WebSocket, безопасное хранилище и host API
+src/        React renderer и пользовательский интерфейс
+shared/     общие типы, контракты и локализации
+tests/      unit- и Electron E2E-тесты
+harness/    спецификации архитектуры и протокола связи
+scripts/    сборка, упаковка и проверка релизов
+```
 
-We welcome contributions from the community! Whether it's bug fixes, new features, documentation improvements, or translations—every contribution helps make OpenX better.
+Renderer обращается к системным возможностям только через типизированный `host-api`. Подключение, авторизация, повторные соединения и RPC к Gateway принадлежат основному процессу Electron.
 
-### How to Contribute
+## Безопасность
 
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/amazing-feature`)
-3. **Commit** your changes with clear messages
-4. **Push** to your branch
-5. **Open** a Pull Request
+Не добавляйте токены, пароли, сертификаты и `.env`-файлы в репозиторий. Обнаруженные уязвимости следует сообщать приватно через GitHub Security Advisories проекта.
 
-### Guidelines
+## Лицензия
 
-- Follow the existing code style (ESLint + Prettier)
-- Write tests for new functionality
-- Update documentation as needed
-- Keep commits atomic and descriptive
-
----
-
-## Acknowledgments
-
-OpenX is built on the shoulders of excellent open-source projects:
-
-- [OpenClaw](https://github.com/OpenClaw) – The AI agent runtime
-- [Electron](https://www.electronjs.org/) – Cross-platform desktop framework
-- [React](https://react.dev/) – UI component library
-- [shadcn/ui](https://ui.shadcn.com/) – Beautifully designed components
-- [Zustand](https://github.com/pmndrs/zustand) – Lightweight state management
-
----
-
-## Community
-
-Join our community to connect with other users, get support, and share your experiences.
-
-| Enterprise WeChat | Feishu Group | Discord |
-| :---: | :---: | :---: |
-| <img src="src/assets/community/wecom-qr.png" width="150" alt="WeChat QR Code" /> | <img src="src/assets/community/feishu-qr.png" width="150" alt="Feishu QR Code" /> | <img src="src/assets/community/20260212-185822.png" width="150" alt="Discord QR Code" /> |
-
-### OpenX Partner Program 🚀
-
-We're launching the OpenX Partner Program and looking for partners who can help introduce OpenX to more clients, especially those with custom AI agent or automation needs.
-
-Partners help connect us with potential users and projects, while the OpenX team provides full technical support, customization, and integration.
-
-If you work with clients interested in AI tools or automation, we'd love to collaborate.
-
-DM us or email [public@valuecell.ai](mailto:public@valuecell.ai) to learn more.
-
----
-
-## Star History
-
-<p align="center">
-  <img src="https://api.star-history.com/svg?repos=ValueCell-ai/OpenX&type=Date" alt="Star History Chart" />
-</p>
-
----
-
-## License
-
-OpenX is released under the [MIT License](LICENSE). You're free to use, modify, and distribute this software.
-
----
-
-<p align="center">
-  <sub>Built with ❤️ by the ValueCell Team</sub>
-</p>
+[MIT](LICENSE)

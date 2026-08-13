@@ -4,7 +4,7 @@ import { closeElectronApp, expect, getStableWindow, test } from './fixtures/elec
 async function readNativeMenuLabels(app: ElectronApplication) {
   return await app.evaluate(({ Menu }) => {
     const menu = Menu.getApplicationMenu();
-    const fileMenu = menu?.items.find((item) => item.label === '文件' || item.label === 'File');
+    const fileMenu = menu?.items.find((item) => item.label === 'Файл' || item.label === 'File');
     return {
       topLevel: menu?.items.map((item) => item.label) ?? [],
       file: fileMenu?.label,
@@ -13,7 +13,7 @@ async function readNativeMenuLabels(app: ElectronApplication) {
         .flatMap((item) => item.submenu?.items ?? [])
         .filter((item) => ['navigate-dashboard', 'navigate-chat', 'navigate-channels', 'navigate-skills', 'navigate-cron'].includes(item.id))
         .map((item) => item.accelerator ?? null),
-      newChat: fileMenu?.submenu?.items.find((item) => item.id === 'new-chat' || item.label === 'New Chat' || item.label === '新对话')?.label,
+      newChat: fileMenu?.submenu?.items.find((item) => item.id === 'new-chat' || item.label === 'New Chat' || item.label === 'Новый чат')?.label,
     };
   });
 }
@@ -270,12 +270,12 @@ test.describe('OpenX main navigation without setup flow', () => {
 
       await page.getByTestId('sidebar-nav-settings').click();
       await page.getByRole('button', { name: 'English' }).click();
-      await page.getByRole('button', { name: '中文' }).click();
+      await page.getByRole('button', { name: 'Русский' }).click();
 
-      await expect(page.getByText('菜单语言已更新')).toBeVisible();
+      await expect(page.getByText('Язык меню обновлён')).toBeVisible();
       await expect.poll(() => readNativeMenuLabels(app)).toMatchObject({
-        file: '文件',
-        newChat: '新对话',
+        file: 'Файл',
+        newChat: 'Новый чат',
       });
     } finally {
       await closeElectronApp(app);

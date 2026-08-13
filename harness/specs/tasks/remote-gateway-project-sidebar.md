@@ -7,9 +7,6 @@ intent: Deliver OpenX as a remote-only OpenClaw Gateway client and replace works
 touchedAreas:
   - AGENTS.md
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
-  - README.ru-RU.md
   - PROJECT_STATUS.md
   - harness/**
   - electron/gateway/**

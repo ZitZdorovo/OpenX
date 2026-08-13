@@ -46,8 +46,6 @@ touchedAreas:
   - tests/e2e/chat-acp-attachments.spec.ts
   - tests/e2e/chat-file-changes.spec.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Authorized DOCX files at or below 20 MB render as isolated, read-only pages with non-interactive links in existing preview surfaces.
   - Authorized PPTX files at or below 20 MB render one slide at a time with localized previous and next controls, while at most one viewer is mounted in the Renderer.

@@ -157,6 +157,8 @@ class BrowserOAuthManager extends EventEmitter {
       baseUrl: existing?.baseUrl,
       apiProtocol: existing?.apiProtocol,
       model: normalizedExistingModel || defaultModel,
+      fallbackModels: existing?.fallbackModels,
+      fallbackAccountIds: existing?.fallbackAccountIds,
       enabled: existing?.enabled ?? true,
       isDefault: existing?.isDefault ?? false,
       metadata: {
@@ -189,6 +191,14 @@ class BrowserOAuthManager extends EventEmitter {
 
     const modelId = normalizedExistingModel || defaultModel;
     const modelRef = `${runtimeProviderId}/${modelId}`;
+    const fallbackModelRefs = (nextAccount.fallbackModels ?? [])
+      .map((fallback) => fallback.trim())
+      .filter(Boolean)
+      .map((fallback) => (
+        fallback.replace(/^openai-codex\//, `${runtimeProviderId}/`).startsWith(`${runtimeProviderId}/`)
+          ? fallback.replace(/^openai-codex\//, `${runtimeProviderId}/`)
+          : `${runtimeProviderId}/${fallback}`
+      ));
 
     try {
       await setOpenClawDefaultModelWithOverride(
@@ -198,6 +208,7 @@ class BrowserOAuthManager extends EventEmitter {
           baseUrl: OPENAI_CODEX_OAUTH_PROVIDER_CONFIG.baseUrl,
           api: OPENAI_CODEX_OAUTH_PROVIDER_CONFIG.api,
         },
+        fallbackModelRefs,
       );
       await ensureOpenClawProviderAgentRuntimePins();
       logger.info(`[BrowserOAuth] Registered ${runtimeProviderId} in openclaw.json (default model: ${modelRef})`);

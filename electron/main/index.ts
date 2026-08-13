@@ -172,23 +172,14 @@ function createWindow(): BrowserWindow {
 }
 
 function loadMainWindow(win: BrowserWindow): void {
-  const shouldSkipSetupForE2E = process.env.OPENX_E2E_SKIP_SETUP === '1';
-
   if (process.env.VITE_DEV_SERVER_URL) {
     const rendererUrl = new URL(process.env.VITE_DEV_SERVER_URL);
-    if (shouldSkipSetupForE2E) {
-      rendererUrl.searchParams.set('e2eSkipSetup', '1');
-    }
     win.loadURL(rendererUrl.toString());
     if (!isE2EMode) {
       win.webContents.openDevTools();
     }
   } else {
-    win.loadFile(join(__dirname, '../../dist/index.html'), {
-      query: shouldSkipSetupForE2E
-        ? { e2eSkipSetup: '1' }
-        : undefined,
-    });
+    win.loadFile(join(__dirname, '../../dist/index.html'));
   }
 }
 

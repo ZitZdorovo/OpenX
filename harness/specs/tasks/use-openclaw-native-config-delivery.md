@@ -32,8 +32,6 @@ touchedAreas:
   - tests/unit/openclaw-image-generation.test.ts
   - tests/unit/provider-runtime-sync.test.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Saving providers, agents, channels, bindings, skills, or other hot-applicable OpenClaw configuration does not replace the Gateway process.
   - Every OpenX mutation of the active OpenClaw config goes through one coordinator-owned read-modify-write transaction.

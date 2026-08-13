@@ -260,7 +260,7 @@ export async function createMenu(language?: string): Promise<void> {
         {
           label: labels.help.documentation,
           click: async () => {
-            await shell.openExternal('https://valuecell.ai');
+            await shell.openExternal('https://github.com/ZitZdorovo/OpenX');
           },
         },
         {

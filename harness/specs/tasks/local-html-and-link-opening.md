@@ -77,9 +77,6 @@ touchedAreas:
   - tests/e2e/web-browser-navigation.spec.ts
   - tests/e2e/web-browser-policy.spec.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
-  - README.ru-RU.md
 expectedUserBehavior:
   - Activating an authorized local `.html` or `.htm` attachment, file activity, or Workspace file opens the existing Preview tab; no standalone Web Browser tab, Home page, or address bar exists.
   - HTML file actions let the user choose the OpenX preview or the system browser. Other file formats retain their existing preview and system-open behavior.

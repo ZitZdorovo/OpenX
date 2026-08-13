@@ -6,8 +6,6 @@ taskType: runtime-bridge
 intent: Collapse backend communication to typed Electron IPC in the renderer, with OpenClaw Gateway WebSocket ownership kept in Electron Main.
 touchedAreas:
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
   - harness/**
   - src/**
   - tests/**
@@ -65,7 +63,7 @@ acceptance:
   - src/lib/host-api.ts exposes typed hostApi facade methods and does not export a path-based fetch helper.
   - src/lib/host-events.ts subscribes through typed IPC events and does not fall back to SSE/EventSource.
   - electron/api and local Host API route tests are removed.
-  - README.md, README.zh-CN.md, and README.ja-JP.md describe typed IPC and Main-owned Gateway WebSocket ownership.
+  - README.md describe typed IPC and Main-owned Gateway WebSocket ownership.
 docs:
   required: true
 ---

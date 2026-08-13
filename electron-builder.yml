@@ -21,8 +21,6 @@ files:
 electronLanguages:
   - en
   - ru
-  - zh-CN
-  - ja
 
 extraResources:
   - from: resources/
@@ -60,7 +58,7 @@ npmRebuild: false
 # renamed client can never install an upstream-branded build over itself.
 publish:
   - provider: github
-    owner: ValueCell-ai
+    owner: ZitZdorovo
     repo: OpenX
 
 # macOS Configuration
@@ -162,7 +160,7 @@ linux:
       arch:
         - x64
   category: Utility
-  maintainer: OpenX Team <public@valuecell.ai>
+  maintainer: OpenX Team <noreply@github.com>
   vendor: OpenX
   synopsis: AI Assistant powered by OpenClaw
   description: OpenX is a remote desktop client for managing an existing OpenClaw Gateway.

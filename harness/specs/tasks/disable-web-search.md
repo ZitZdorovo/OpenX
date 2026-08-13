@@ -9,8 +9,6 @@ touchedAreas:
   - tests/unit/openclaw-auth.test.ts
   - tests/unit/sanitize-config.test.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
   - harness/specs/rules/active-config-guards.md
   - harness/specs/scenarios/gateway-backend-communication.md
   - harness/specs/tasks/disable-web-search.md

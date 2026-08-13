@@ -16,8 +16,6 @@ touchedAreas:
   - tests/unit/gateway-manager-diagnostics.test.ts
   - tests/unit/gateway-connection-monitor.test.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - One to nine consecutive missed Gateway heartbeat responses remain diagnostic-only and do not interrupt long-running work.
   - Ten consecutive missed heartbeat responses mark the Gateway unresponsive and request an automatic restart when lifecycle auto-recovery is enabled and the Gateway is still running.

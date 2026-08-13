@@ -15,8 +15,6 @@ touchedAreas:
   - harness/specs/scenarios/chat-workspace-and-navigation.md
   - harness/specs/tasks/restore-hardware-accelerated-rendering.md
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Long rich-Markdown conversations scroll smoothly on supported desktop GPUs.
   - Collapsing or expanding the sidebar preserves its existing animation without software-rasterization frame drops.

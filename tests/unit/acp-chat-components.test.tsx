@@ -49,8 +49,8 @@ vi.mock('sonner', () => ({
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, options?: Record<string, unknown>) => {
-      if (i18nLanguage.value === 'zh' && key === 'acp.turnDuration') return `用时 ${String(options?.duration ?? '')}`;
-      if (i18nLanguage.value === 'zh' && key === 'acp.turnElapsed') return `已处理 ${String(options?.duration ?? '')}`;
+      if (i18nLanguage.value === 'ru' && key === 'acp.turnDuration') return `Заняло ${String(options?.duration ?? '')}`;
+      if (i18nLanguage.value === 'ru' && key === 'acp.turnElapsed') return `Прошло ${String(options?.duration ?? '')}`;
       const labels: Record<string, string> = {
         'acp.thought': 'Thought',
         'acp.tool': 'Tool',
@@ -545,10 +545,10 @@ describe('ACP chat timeline components', () => {
     expect(screen.getByTestId('acp-turn-duration')).toHaveTextContent('Took 6 sec');
   });
 
-  it('floors Chinese whole-turn seconds, spaces the unit, and uses processing/completed copy', () => {
+  it('floors Russian whole-turn seconds, spaces the unit, and uses processing/completed copy', () => {
     vi.useFakeTimers();
     vi.setSystemTime(20_000);
-    i18nLanguage.value = 'zh';
+    i18nLanguage.value = 'ru';
     const state = snapshot({
       itemOrder: ['user-a:0', 'assistant-a:0', 'user-b:0', 'assistant-b:0'],
       itemsById: {
@@ -579,8 +579,8 @@ describe('ACP chat timeline components', () => {
       }}
     />);
 
-    expect(screen.getByText('用时 23 秒')).toBeVisible();
-    expect(screen.getByText('已处理 19 秒')).toBeVisible();
+    expect(screen.getByText('Заняло 23 с')).toBeVisible();
+    expect(screen.getByText('Прошло 19 с')).toBeVisible();
     vi.useRealTimers();
   });
 

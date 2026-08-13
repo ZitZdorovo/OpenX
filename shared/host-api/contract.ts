@@ -373,6 +373,8 @@ export type ProviderConfig = {
   apiProtocol?: ProviderProtocol;
   headers?: Record<string, string>;
   model?: string;
+  fallbackModels?: string[];
+  fallbackProviderIds?: string[];
   enabled: boolean;
   createdAt: string;
   updatedAt: string;
@@ -398,7 +400,6 @@ export type ProviderVendorInfo = {
   supportsApiKey?: boolean;
   apiKeyUrl?: string;
   docsUrl?: string;
-  docsUrlZh?: string;
   codePlanPresetBaseUrl?: string;
   codePlanPresetModelId?: string;
   codePlanDocsUrl?: string;
@@ -419,6 +420,8 @@ export type ProviderAccount = {
   apiProtocol?: ProviderProtocol;
   headers?: Record<string, string>;
   model?: string;
+  fallbackModels?: string[];
+  fallbackAccountIds?: string[];
   enabled: boolean;
   isDefault: boolean;
   metadata?: {

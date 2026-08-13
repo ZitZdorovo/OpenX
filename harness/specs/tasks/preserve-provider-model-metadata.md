@@ -13,8 +13,6 @@ touchedAreas:
   - tests/unit/provider-model-capabilities.test.ts
   - tests/unit/openclaw-auth.test.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Switching away from and back to a custom provider keeps manually configured model input capabilities and other model-level metadata.
   - Changing a custom provider to a known vision model such as Claude or Gemini writes image-capable input metadata without copying metadata from the previous model ID.

@@ -272,6 +272,7 @@ describe('provider-runtime-sync config delivery', () => {
         baseUrl: 'https://chatgpt.com/backend-api/codex',
         api: 'openai-chatgpt-responses',
       },
+      expect.any(Array),
     );
   });
 
@@ -302,6 +303,7 @@ describe('provider-runtime-sync config delivery', () => {
     expect(mocks.setOpenClawDefaultModel).toHaveBeenCalledWith(
       'openai',
       'openai/gpt-5.6',
+      [],
     );
   });
 
@@ -399,6 +401,7 @@ describe('provider-runtime-sync config delivery', () => {
         baseUrl: 'http://localhost:11434/v1',
         api: 'openai-completions',
       }),
+      expect.any(Array),
     );
   });
   it('syncs updated Ollama provider as default with correct override config', async () => {
@@ -425,6 +428,7 @@ describe('provider-runtime-sync config delivery', () => {
         baseUrl: 'http://localhost:11434/v1',
         api: 'openai-completions',
       }),
+      expect.any(Array),
     );
     // Should NOT call the non-override path
     expect(mocks.setOpenClawDefaultModel).not.toHaveBeenCalled();

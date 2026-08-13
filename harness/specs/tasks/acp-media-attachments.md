@@ -111,8 +111,6 @@ touchedAreas:
   - tests/e2e/fixtures/electron.ts
   - tests/e2e/gateway-lifecycle.spec.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Standard ACP resource_link and URI-backed resource content renders as paperclip attachment cards.
   - Canonical assistant `__openclaw.media` facts render as attachment cards even when visible prose only mentions the output path.

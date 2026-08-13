@@ -6,8 +6,6 @@ taskType: runtime-bridge
 intent: Recover explicit assistant OpenClaw MEDIA attachments when the triggering ACP user turn contains structured image or resource content without weakening transcript evidence or attachment authorization.
 touchedAreas:
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
   - harness/specs/tasks/fix-acp-media-attached-turn-alignment.md
   - harness/specs/tasks/acp-media-attachments.md
   - harness/specs/tasks/preserve-acp-stream-across-navigation.md

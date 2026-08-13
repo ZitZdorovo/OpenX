@@ -24,7 +24,7 @@ async function openChatWithInstalledMocks(app: ElectronApplication) {
 }
 
 test.describe('OpenX chat skill trigger', () => {
-  test('renders the localized Chinese skill label after the @ trigger', async ({ launchElectronApp }) => {
+  test('renders the localized Russian skill label after the @ trigger', async ({ launchElectronApp }) => {
     const app = await launchElectronApp({ skipSetup: true });
 
     try {
@@ -53,7 +53,7 @@ test.describe('OpenX chat skill trigger', () => {
               status: 200,
               ok: true,
               json: {
-                language: 'zh',
+                language: 'ru',
                 setupComplete: true,
               },
             },
@@ -100,7 +100,7 @@ test.describe('OpenX chat skill trigger', () => {
       await expect(page.getByTestId('main-layout')).toBeVisible();
       await expect(page.getByTestId('chat-composer-input')).toBeVisible({ timeout: 30_000 });
       await expect(page.getByTestId('chat-composer-agent')).toBeVisible();
-      await expect(page.getByTestId('chat-composer-skill')).toHaveText('技能');
+      await expect(page.getByTestId('chat-composer-skill')).toHaveText('Навыки');
 
       const isSkillAfterAgent = await page.evaluate(() => {
         const agentTrigger = document.querySelector('[data-testid="chat-composer-agent"]');

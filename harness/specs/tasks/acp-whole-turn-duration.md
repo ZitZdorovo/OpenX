@@ -35,8 +35,6 @@ touchedAreas:
   - tests/e2e/chat-acp-inline-timeline.spec.ts
   - tests/e2e/chat-acp-attachments.spec.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - A running ACP assistant turn shows elapsed whole-turn time without resetting when the user navigates away and returns.
   - A completed live turn freezes the observed duration when the ACP prompt settles.

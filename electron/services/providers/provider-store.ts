@@ -2,18 +2,6 @@ import type { ProviderAccount, ProviderConfig, ProviderType } from '../../shared
 import { getProviderDefinition } from '../../shared/providers/registry';
 import { getOpenXProviderStore } from './store-instance';
 
-type LegacyProviderAccount = ProviderAccount & {
-  fallbackModels?: unknown;
-  fallbackAccountIds?: unknown;
-};
-
-function removeFallbackConfiguration(account: LegacyProviderAccount): ProviderAccount {
-  const sanitized = { ...account };
-  delete sanitized.fallbackModels;
-  delete sanitized.fallbackAccountIds;
-  return sanitized;
-}
-
 
 function inferAuthMode(type: ProviderType): ProviderAccount['authMode'] {
   if (type === 'ollama') {
@@ -43,6 +31,8 @@ export function providerConfigToAccount(
       : getProviderDefinition(config.type)?.providerConfig?.api),
     headers: config.headers,
     model: config.model,
+    fallbackModels: config.fallbackModels,
+    fallbackAccountIds: config.fallbackProviderIds,
     enabled: config.enabled,
     isDefault: options?.isDefault ?? false,
     createdAt: config.createdAt,
@@ -59,6 +49,8 @@ export function providerAccountToConfig(account: ProviderAccount): ProviderConfi
     apiProtocol: account.apiProtocol,
     headers: account.headers,
     model: account.model,
+    fallbackModels: account.fallbackModels,
+    fallbackProviderIds: account.fallbackAccountIds,
     enabled: account.enabled,
     createdAt: account.createdAt,
     updatedAt: account.updatedAt,
@@ -67,29 +59,20 @@ export function providerAccountToConfig(account: ProviderAccount): ProviderConfi
 
 export async function listProviderAccounts(): Promise<ProviderAccount[]> {
   const store = await getOpenXProviderStore();
-  const accounts = store.get('providerAccounts') as Record<string, LegacyProviderAccount> | undefined;
-  const sanitizedEntries = Object.entries(accounts ?? {}).map(([id, account]) => [
-    id,
-    removeFallbackConfiguration(account),
-  ] as const);
-  if (Object.values(accounts ?? {}).some((account) => (
-    Object.hasOwn(account, 'fallbackModels') || Object.hasOwn(account, 'fallbackAccountIds')
-  ))) {
-    store.set('providerAccounts', Object.fromEntries(sanitizedEntries));
-  }
-  return sanitizedEntries.map(([, account]) => account);
+  const accounts = store.get('providerAccounts') as Record<string, ProviderAccount> | undefined;
+  return Object.values(accounts ?? {});
 }
 
 export async function getProviderAccount(accountId: string): Promise<ProviderAccount | null> {
   const store = await getOpenXProviderStore();
-  const accounts = store.get('providerAccounts') as Record<string, LegacyProviderAccount> | undefined;
-  return accounts?.[accountId] ? removeFallbackConfiguration(accounts[accountId]) : null;
+  const accounts = store.get('providerAccounts') as Record<string, ProviderAccount> | undefined;
+  return accounts?.[accountId] ?? null;
 }
 
 export async function saveProviderAccount(account: ProviderAccount): Promise<void> {
   const store = await getOpenXProviderStore();
   const accounts = (store.get('providerAccounts') ?? {}) as Record<string, ProviderAccount>;
-  accounts[account.id] = removeFallbackConfiguration(account);
+  accounts[account.id] = account;
   store.set('providerAccounts', accounts);
 }
 

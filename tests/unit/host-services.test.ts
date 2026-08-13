@@ -1222,45 +1222,32 @@ describe('host services', () => {
   });
 
   it('loads session summaries and transcript history through the typed sessions service', async () => {
-    const sessionsDir = join(testOpenClawConfigDir, 'agents', 'main', 'sessions');
-    mkdirSync(sessionsDir, { recursive: true });
-    writeFileSync(join(sessionsDir, 'sessions.json'), JSON.stringify({
-      sessions: [
-        {
+    const rpc = vi.fn()
+      .mockResolvedValueOnce({
+        sessions: [{
           key: 'agent:main:abc123',
-          file: 'abc123.jsonl',
-        },
-      ],
-    }));
-    writeFileSync(join(sessionsDir, 'abc123.jsonl'), [
-      JSON.stringify({
-        type: 'message',
-        message: {
-          role: 'user',
-          content: '[Working directory: ~/.openclaw/workspace]\n\nSender: test-user\n[Working directory: ~/.openclaw/workspace]\n\nHello from transcript',
-          timestamp: 1000,
-        },
-      }),
-      JSON.stringify({
-        type: 'message',
-        message: {
-          role: 'assistant',
-          content: 'Hi',
-          timestamp: 1001,
-        },
-      }),
-    ].join('\n'));
+          label: 'Hello from Gateway',
+          updatedAt: 1001000,
+          cwd: '/srv/openx/project',
+        }],
+      })
+      .mockResolvedValueOnce({
+        messages: [
+          { role: 'user', content: 'Hello from Gateway', timestamp: 1000 },
+          { role: 'assistant', content: 'Hi', timestamp: 1001 },
+        ],
+      });
     const { createSessionsApi } = await import('@electron/services/sessions-api');
-    const sessionsApi = createSessionsApi();
+    const sessionsApi = createSessionsApi({ rpc, isConnected: () => true } as never);
 
     await expect(sessionsApi.summaries({ sessionKeys: ['agent:main:abc123'] }))
       .resolves.toEqual({
         success: true,
         summaries: [{
           sessionKey: 'agent:main:abc123',
-          firstUserText: 'Hello from transcript',
+          firstUserText: 'Hello from Gateway',
           lastTimestamp: 1001000,
-          workspacePath: null,
+          workspacePath: '/srv/openx/project',
         }],
       });
     await expect(sessionsApi.history({ sessionKey: 'agent:main:abc123', limit: 5 }))
@@ -1269,12 +1256,17 @@ describe('host services', () => {
         messages: [
           {
             role: 'user',
-            content: '[Working directory: ~/.openclaw/workspace]\n\nSender: test-user\n[Working directory: ~/.openclaw/workspace]\n\nHello from transcript',
+            content: 'Hello from Gateway',
             timestamp: 1000,
           },
           { role: 'assistant', content: 'Hi', timestamp: 1001 },
         ],
       });
+    expect(rpc).toHaveBeenNthCalledWith(1, 'sessions.list', { limit: 1 });
+    expect(rpc).toHaveBeenNthCalledWith(2, 'chat.history', {
+      sessionKey: 'agent:main:abc123',
+      limit: 5,
+    });
   });
 
   it('delegates all attachment-scoped file operations from the files service', async () => {

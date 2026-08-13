@@ -37,8 +37,6 @@ touchedAreas:
   - tests/e2e/chat-sidebar-session-attention.spec.ts
   - harness/reference/chat-workspace-and-navigation.md
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - A sidebar session shows a loading indicator while its exact Gateway session row is active.
   - An observed completion outside the visible Chat session shows an unread indicator until the conversation is opened.

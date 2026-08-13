@@ -39,7 +39,8 @@
       "local": "Локальный"
     },
     "sections": {
-      "model": "Настройки модели"
+      "model": "Настройки модели",
+      "fallback": "Настройки резервного переключения"
     },
     "add": "Добавить провайдера",
     "custom": "Свой",
@@ -71,6 +72,12 @@
       "advancedConfig": "Расширенная конфигурация",
       "userAgent": "User-Agent",
       "userAgentPlaceholder": "OpenX/1.0",
+      "fallbackModels": "Резервные модели",
+      "fallbackProviders": "Резервные провайдеры",
+      "fallbackModelIds": "ID резервных моделей",
+      "fallbackModelIdsPlaceholder": "gpt-4.1-mini\nanother-model-id",
+      "fallbackModelIdsHelp": "Один ID модели на строку. Эти модели используют текущую конфигурацию провайдера перед переходом к другим провайдерам.",
+      "noFallbackOptions": "Сначала добавьте другого провайдера, чтобы использовать его как резервный.",
       "cancel": "Отмена",
       "change": "Изменить провайдера",
       "add": "Добавить провайдера",
@@ -84,6 +91,8 @@
       "configured": "Настроен",
       "noKey": "API-ключ не задан",
       "none": "Нет",
+      "fallbacks_one": "Резервный: {{names}}",
+      "fallbacks_other": "Резервные ({{count}}): {{names}}",
       "setDefault": "Установить по умолчанию",
       "editKey": "Редактировать API-ключ",
       "delete": "Удалить провайдера"

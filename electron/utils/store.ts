@@ -49,6 +49,7 @@ export interface AppSettings {
   workspaceLabels: Record<string, string>;
   agentBadgeMode: 'full' | 'initial' | 'hidden' | 'custom';
   agentBadgeAliases: Record<string, string>;
+  setupComplete: boolean;
 
   // Presets
   selectedBundles: string[];
@@ -105,6 +106,7 @@ function createDefaultSettings(): AppSettings {
     workspaceLabels: {},
     agentBadgeMode: 'full',
     agentBadgeAliases: {},
+    setupComplete: false,
 
     // Presets
     selectedBundles: ['productivity', 'developer'],

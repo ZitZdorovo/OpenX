@@ -787,9 +787,7 @@ export function ChatInput({
     }
 
     try {
-      console.log('[stagePathFiles] Staging files:', filePaths);
       const staged = await hostApi.files.stagePaths({ filePaths });
-      console.log('[stagePathFiles] Stage result:', staged?.map(s => ({ id: s?.id, fileName: s?.fileName, mimeType: s?.mimeType, fileSize: s?.fileSize, stagedPath: s?.stagedPath, hasPreview: !!s?.preview })));
 
       setAttachments(prev => {
         let updated = [...prev];
@@ -851,15 +849,12 @@ export function ChatInput({
       }]);
 
       try {
-        console.log(`[stageBuffer] Reading file: ${file.name} (${file.type}, ${file.size} bytes)`);
         const base64 = await readFileAsBase64(file);
-        console.log(`[stageBuffer] Base64 length: ${base64?.length ?? 'null'}`);
         const staged = await hostApi.files.stageBuffer({
           base64,
           fileName: file.name,
           mimeType: file.type || 'application/octet-stream',
         });
-        console.log(`[stageBuffer] Staged: id=${staged?.id}, path=${staged?.stagedPath}, size=${staged?.fileSize}`);
         setAttachments(prev => prev.map(a =>
           a.id === tempId ? { ...staged, status: 'ready' as const } : a,
         ));
@@ -911,13 +906,6 @@ export function ChatInput({
 
     // Capture values before clearing — clear input immediately for snappy UX,
     // but keep attachments available for the async send
-    console.log(`[handleSend] text="${textToSend.substring(0, 50)}", attachments=${attachments.length}, ready=${readyAttachments.length}, sending=${!!attachmentsToSend}`);
-    if (attachmentsToSend) {
-      console.log('[handleSend] Attachment details:', attachmentsToSend.map(a => ({
-        id: a.id, fileName: a.fileName, mimeType: a.mimeType, fileSize: a.fileSize,
-        stagedPath: a.stagedPath, status: a.status, hasPreview: !!a.preview,
-      })));
-    }
     setInput('');
     setAttachments([]);
     setSelectedSkill(null);

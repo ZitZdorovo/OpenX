@@ -1516,6 +1516,7 @@ export function buildProviderEnvVars(providers: Array<{ type: string; apiKey: st
 export async function setOpenClawDefaultModel(
   provider: string,
   modelOverride?: string,
+  fallbackModels: string[] = []
 ): Promise<void> {
   await mutateOpenClawConfig((config) => {
     ensureMoonshotKimiWebSearchCnBaseUrl(config, provider);
@@ -1527,13 +1528,13 @@ export async function setOpenClawDefaultModel(
     }
 
     const modelId = extractModelId(provider, model);
-    clearAgentModelFallbacks(config);
+    const fallbackModelIds = extractFallbackModelIds(provider, fallbackModels);
     // Set the default model for the agents
     const agents = (config.agents || {}) as Record<string, unknown>;
     const defaults = (agents.defaults || {}) as Record<string, unknown>;
     defaults.model = {
       primary: model,
-      fallbacks: [],
+      fallbacks: fallbackModels,
     };
     agents.defaults = defaults;
     config.agents = agents;
@@ -1547,7 +1548,7 @@ export async function setOpenClawDefaultModel(
         api: providerCfg.api,
         apiKeyEnv: providerCfg.apiKeyEnv,
         headers: providerCfg.headers,
-        modelIds: [modelId],
+        modelIds: [modelId, ...fallbackModelIds],
         includeRegistryModels: true,
         mergeExistingModels: true,
       });
@@ -1555,9 +1556,10 @@ export async function setOpenClawDefaultModel(
     } else if (provider === 'openai-codex') {
       // Legacy runtime key: OpenClaw Codex hooks only apply to canonical `openai`.
       const oauthModel = model.replace(/^openai-codex\//, 'openai/');
+      const oauthFallbacks = fallbackModels.map((fallback) => fallback.replace(/^openai-codex\//, 'openai/'));
       defaults.model = {
         primary: oauthModel,
-        fallbacks: [],
+        fallbacks: oauthFallbacks,
       };
       agents.defaults = defaults;
       config.agents = agents;
@@ -1565,7 +1567,7 @@ export async function setOpenClawDefaultModel(
       upsertOpenClawProviderEntry(config, 'openai', {
         baseUrl: OPENAI_CODEX_OAUTH_PROVIDER_CONFIG.baseUrl,
         api: OPENAI_CODEX_OAUTH_PROVIDER_CONFIG.api,
-        modelIds: [modelId],
+        modelIds: [modelId, ...fallbackModelIds],
         mergeExistingModels: true,
       });
       const modelsConfig = (config.models || {}) as Record<string, unknown>;
@@ -1631,23 +1633,10 @@ function extractModelId(provider: string, modelRef: string): string {
   return modelRef.startsWith(`${provider}/`) ? modelRef.slice(provider.length + 1) : modelRef;
 }
 
-function clearAgentModelFallbacks(config: Record<string, unknown>): void {
-  const agents = (config.agents || {}) as Record<string, unknown>;
-  const defaults = (agents.defaults || {}) as Record<string, unknown>;
-  if (isPlainRecord(defaults.model)) {
-    defaults.model.fallbacks = [];
-  }
-
-  if (Array.isArray(agents.list)) {
-    for (const entry of agents.list) {
-      if (isPlainRecord(entry) && isPlainRecord(entry.model)) {
-        entry.model.fallbacks = [];
-      }
-    }
-  }
-
-  agents.defaults = defaults;
-  config.agents = agents;
+function extractFallbackModelIds(provider: string, fallbackModels: string[]): string[] {
+  return fallbackModels
+    .filter((fallback) => fallback.startsWith(`${provider}/`))
+    .map((fallback) => fallback.slice(provider.length + 1));
 }
 
 function mergeProviderModels(
@@ -2291,6 +2280,7 @@ export async function setOpenClawDefaultModelWithOverride(
   provider: string,
   modelOverride: string | undefined,
   override: RuntimeProviderConfigOverride,
+  fallbackModels: string[] = []
 ): Promise<void> {
   await mutateOpenClawConfig((config) => {
     ensureMoonshotKimiWebSearchCnBaseUrl(config, provider);
@@ -2302,12 +2292,12 @@ export async function setOpenClawDefaultModelWithOverride(
     }
 
     const modelId = extractModelId(provider, model);
-    clearAgentModelFallbacks(config);
+    const fallbackModelIds = extractFallbackModelIds(provider, fallbackModels);
     const agents = (config.agents || {}) as Record<string, unknown>;
     const defaults = (agents.defaults || {}) as Record<string, unknown>;
     defaults.model = {
       primary: model,
-      fallbacks: [],
+      fallbacks: fallbackModels,
     };
     agents.defaults = defaults;
     config.agents = agents;
@@ -2320,7 +2310,7 @@ export async function setOpenClawDefaultModelWithOverride(
         apiKeyEnv: override.apiKeyEnv,
         headers: override.headers,
         authHeader: override.authHeader,
-        modelIds: [modelId],
+        modelIds: [modelId, ...fallbackModelIds],
         mergeExistingModels: true,
         inferRuntimeModelInputs: true,
       });

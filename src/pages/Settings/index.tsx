@@ -1356,7 +1356,7 @@ export function Settings() {
                 <Button
                   variant="link"
                   className="h-auto p-0 text-sm text-blue-500 hover:text-blue-600 font-medium"
-                  onClick={() => window.electron.openExternal('https://valuecell.ai')}
+                  onClick={() => window.electron.openExternal('https://github.com/ZitZdorovo/OpenX')}
                 >
                   {t('about.docs')}
                 </Button>

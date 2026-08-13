@@ -19,6 +19,7 @@ type UpdateChannel = 'stable' | 'beta' | 'dev';
 export type AgentBadgeMode = 'full' | 'initial' | 'hidden' | 'custom';
 
 interface SettingsState {
+  initialized: boolean;
   // General
   theme: Theme;
   language: string;
@@ -82,6 +83,7 @@ interface SettingsState {
 }
 
 const defaultSettings = {
+  initialized: false,
   theme: 'system' as Theme,
   language: resolveSupportedLanguage(typeof navigator !== 'undefined' ? navigator.language : undefined),
   startMinimized: false,
@@ -124,6 +126,7 @@ export const useSettingsStore = create<SettingsState>()(
           set((state) => ({
             ...state,
             ...settings,
+            initialized: true,
             ...(resolvedLanguage ? { language: resolvedLanguage } : {}),
             ...(typeof settings.sidebarWidth === 'number'
               ? { sidebarWidth: clampSidebarWidth(settings.sidebarWidth) }
@@ -135,6 +138,7 @@ export const useSettingsStore = create<SettingsState>()(
         } catch {
           // Keep renderer-persisted settings as a fallback when the main
           // process store is not reachable.
+          set({ initialized: true });
         }
       },
 
@@ -257,8 +261,11 @@ export const useSettingsStore = create<SettingsState>()(
         set(patch);
         await hostApi.settings.setMany(patch);
       },
-      markSetupComplete: () => set({ setupComplete: true }),
-      resetSettings: () => set(defaultSettings),
+      markSetupComplete: () => {
+        set({ setupComplete: true });
+        void hostApi.settings.set('setupComplete', true).catch(() => { });
+      },
+      resetSettings: () => set({ ...defaultSettings, initialized: true }),
     }),
     {
       name: 'openx-settings',

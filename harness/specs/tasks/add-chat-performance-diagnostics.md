@@ -17,8 +17,6 @@ touchedAreas:
   - tests/unit/**
   - package.json
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
   - AGENTS.md
 expectedUserBehavior:
   - ACP chat output remains semantically identical while long streaming responses stay responsive.

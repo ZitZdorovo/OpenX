@@ -65,6 +65,8 @@ export interface ProviderConfig {
   apiProtocol?: ProviderProtocol;
   headers?: Record<string, string>;
   model?: string;
+  fallbackModels?: string[];
+  fallbackProviderIds?: string[];
   enabled: boolean;
   createdAt: string;
   updatedAt: string;
@@ -92,7 +94,6 @@ export interface ProviderTypeInfo {
   supportsApiKey?: boolean;
   apiKeyUrl?: string;
   docsUrl?: string;
-  docsUrlZh?: string;
   codePlanPresetBaseUrl?: string;
   codePlanPresetModelId?: string;
   codePlanDocsUrl?: string;
@@ -131,6 +132,8 @@ export interface ProviderAccount {
   apiProtocol?: ProviderProtocol;
   headers?: Record<string, string>;
   model?: string;
+  fallbackModels?: string[];
+  fallbackAccountIds?: string[];
   enabled: boolean;
   isDefault: boolean;
   metadata?: {
@@ -190,7 +193,7 @@ export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
   { id: 'moonshot', name: 'Moonshot (CN)', icon: '🌙', placeholder: 'sk-...', model: 'Kimi', requiresApiKey: true, defaultBaseUrl: 'https://api.moonshot.cn/v1', showModelId: true, defaultModelId: 'kimi-k2.6', modelIdPlaceholder: 'kimi-k2.6', docsUrl: 'https://platform.moonshot.cn/' },
   { id: 'moonshot-global', name: 'Moonshot (Global)', icon: '🌙', placeholder: 'sk-...', model: 'Kimi', requiresApiKey: true, defaultBaseUrl: 'https://api.moonshot.ai/v1', showModelId: true, defaultModelId: 'kimi-k2.6', modelIdPlaceholder: 'kimi-k2.6', docsUrl: 'https://platform.moonshot.ai/' },
   { id: 'siliconflow', name: 'SiliconFlow (CN)', icon: '🌊', placeholder: 'sk-...', model: 'Multi-Model', requiresApiKey: true, defaultBaseUrl: 'https://api.siliconflow.cn/v1', showModelId: true, modelIdPlaceholder: 'deepseek-ai/DeepSeek-V3', defaultModelId: 'deepseek-ai/DeepSeek-V3', docsUrl: 'https://docs.siliconflow.cn/cn/userguide/introduction' },
-  { id: 'deepseek', name: 'DeepSeek', icon: '🐋', placeholder: 'sk-...', model: 'DeepSeek', requiresApiKey: true, defaultBaseUrl: 'https://api.deepseek.com/v1', showModelId: true, modelIdPlaceholder: 'deepseek-v4-pro', defaultModelId: 'deepseek-v4-pro', apiKeyUrl: 'https://platform.deepseek.com/api_keys', docsUrl: 'https://api-docs.deepseek.com/', docsUrlZh: 'https://api-docs.deepseek.com/zh-cn/' },
+  { id: 'deepseek', name: 'DeepSeek', icon: '🐋', placeholder: 'sk-...', model: 'DeepSeek', requiresApiKey: true, defaultBaseUrl: 'https://api.deepseek.com/v1', showModelId: true, modelIdPlaceholder: 'deepseek-v4-pro', defaultModelId: 'deepseek-v4-pro', apiKeyUrl: 'https://platform.deepseek.com/api_keys', docsUrl: 'https://api-docs.deepseek.com/' },
   { id: 'minimax-portal', name: 'MiniMax (Global)', icon: '☁️', placeholder: 'sk-...', model: 'MiniMax', requiresApiKey: false, isOAuth: true, supportsApiKey: true, defaultModelId: 'MiniMax-M3', showModelId: true, modelIdPlaceholder: 'MiniMax-M3', apiKeyUrl: 'https://platform.minimax.io' },
   {
     id: 'zai',
@@ -206,7 +209,6 @@ export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
     defaultModelId: 'glm-5.2',
     apiKeyUrl: 'https://open.bigmodel.cn/usercenter/proj-mgmt/apikeys',
     docsUrl: 'https://docs.bigmodel.cn/cn/api/introduction',
-    docsUrlZh: 'https://docs.bigmodel.cn/cn/api/introduction',
     codePlanPresetBaseUrl: 'https://open.bigmodel.cn/api/coding/paas/v4',
     codePlanPresetModelId: 'glm-5.2',
     codePlanDocsUrl: 'https://docs.bigmodel.cn/cn/coding-plan/quick-start',
@@ -242,7 +244,6 @@ export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
     showModelId: true,
     modelIdPlaceholder: 'your-provider/model-id',
     docsUrl: 'https://icnnp7d0dymg.feishu.cn/wiki/BmiLwGBcEiloZDkdYnGc8RWnn6d#Ee1ldfvKJoVGvfxc32mcILwenth',
-    docsUrlZh: 'https://icnnp7d0dymg.feishu.cn/wiki/BmiLwGBcEiloZDkdYnGc8RWnn6d#IWQCdfe5fobGU3xf3UGcgbLynGh',
   },
 ];
 
@@ -265,15 +266,11 @@ export function getProviderTypeInfo(type: ProviderType): ProviderTypeInfo | unde
 }
 
 export function getProviderDocsUrl(
-  provider: Pick<ProviderTypeInfo, 'docsUrl' | 'docsUrlZh'> | undefined,
-  language: string
+  provider: Pick<ProviderTypeInfo, 'docsUrl'> | undefined,
+  _language: string
 ): string | undefined {
   if (!provider?.docsUrl) {
     return undefined;
-  }
-
-  if (language.startsWith('zh') && provider.docsUrlZh) {
-    return provider.docsUrlZh;
   }
 
   return provider.docsUrl;

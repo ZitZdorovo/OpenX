@@ -95,14 +95,13 @@ function formatRelativeTime(timestamp: number | undefined, locale: string): stri
   if (!timestamp) return '';
   const elapsedSeconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
   const isRussian = locale.toLocaleLowerCase().startsWith('ru');
-  const isCjk = /^(ja|zh)/i.test(locale);
-  if (elapsedSeconds < 60) return isRussian ? '<1м' : isCjk ? '<1分' : '<1m';
+  if (elapsedSeconds < 60) return isRussian ? '<1м' : '<1m';
   const minutes = Math.floor(elapsedSeconds / 60);
-  if (minutes < 60) return `${minutes}${isRussian ? 'м' : isCjk ? '分' : 'm'}`;
+  if (minutes < 60) return `${minutes}${isRussian ? 'м' : 'm'}`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}${isRussian ? 'ч' : isCjk ? '時' : 'h'}`;
+  if (hours < 24) return `${hours}${isRussian ? 'ч' : 'h'}`;
   const days = Math.floor(hours / 24);
-  return `${days}${isRussian ? 'д' : isCjk ? '日' : 'd'}`;
+  return `${days}${isRussian ? 'д' : 'd'}`;
 }
 
 function SectionHeader({ title, collapsed, onToggle, action }: { title: string; collapsed: boolean; onToggle: () => void; action?: ReactNode }) {
@@ -639,14 +638,7 @@ export function Sidebar() {
             void dropChat(event, { projectId: project.id, folderId: folderId ?? null, beforeChatKey });
           }
         }}
-        onClick={(event) => {
-          if (currentKey === session.key) {
-            event.stopPropagation();
-            beginChatRename(session);
-            return;
-          }
-          selectChat(session, project, folderId);
-        }}
+        onClick={() => selectChat(session, project, folderId)}
         onKeyDown={(event) => {
           if (event.target !== event.currentTarget || (event.key !== 'Enter' && event.key !== ' ')) return;
           event.preventDefault();

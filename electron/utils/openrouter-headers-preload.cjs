@@ -38,7 +38,7 @@
       delete flat['X-Title'];
       delete flat['x-openrouter-title'];
       delete flat['X-OpenRouter-Title'];
-      flat['HTTP-Referer'] = 'https://claw-x.com';
+      flat['HTTP-Referer'] = 'https://github.com/ZitZdorovo/OpenX';
       flat['X-OpenRouter-Title'] = 'OpenX';
       init.headers = flat;
     }

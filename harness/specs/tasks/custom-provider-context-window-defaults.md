@@ -12,8 +12,6 @@ touchedAreas:
   - tests/unit/provider-model-capabilities.test.ts
   - tests/unit/openclaw-auth.test.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Saving or updating a custom provider writes model rows that include an inferred contextWindow, so OpenClaw's preemptive compaction and context-window guard are active for custom models.
   - Existing custom provider model rows that already carry contextWindow or contextTokens are never modified.

@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const statusMock = vi.fn();
-const localMock = vi.fn();
 const clawhubSearchMock = vi.fn();
 const clawhubInstallMock = vi.fn();
 
@@ -9,7 +8,6 @@ vi.mock('@/lib/host-api', () => ({
   hostApi: {
     skills: {
       status: () => statusMock(),
-      local: () => localMock(),
       clawhubSearch: (input: unknown) => clawhubSearchMock(input),
       clawhubInstall: (input: unknown) => clawhubInstallMock(input),
       clawhubUninstall: vi.fn(),
@@ -24,14 +22,13 @@ describe('skills store error mapping', () => {
     vi.clearAllMocks();
   });
 
-  it('maps fetchSkills rate-limit error when both local and gateway loading fail', async () => {
+  it('surfaces the remote Gateway error without trying a local fallback', async () => {
     statusMock.mockRejectedValueOnce(new Error('gateway unavailable'));
-    localMock.mockRejectedValueOnce(new Error('rate limit exceeded'));
 
     const { useSkillsStore } = await import('@/stores/skills');
     await useSkillsStore.getState().fetchSkills();
 
-    expect(useSkillsStore.getState().error).toBe('fetchRateLimitError');
+    expect(useSkillsStore.getState().error).toBe('gateway unavailable');
   });
 
   it('maps searchSkills timeout error by AppError code', async () => {

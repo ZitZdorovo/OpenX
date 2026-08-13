@@ -23,8 +23,6 @@ touchedAreas:
   - tests/unit/dreams-page.test.tsx
   - tests/unit/openclaw-control-ui.test.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - OpenX no longer shows a Dreams navigation item or serves the /dreams route, including when developer mode is enabled.
   - OpenX continues to open the root OpenClaw Control UI from existing non-Dreams entry points.

@@ -33,8 +33,6 @@ touchedAreas:
   - tests/e2e/image-generation-settings.spec.ts
   - tests/e2e/app-smoke.spec.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Models page no longer embeds Image Generation; developer mode shows a dedicated Image Generation sidebar page alongside Skills and Cron.
   - Saving settings writes openclaw.json agents.defaults.imageGenerationModel from the explicit custom image endpoint form; default chat provider changes do not auto-sync image models.

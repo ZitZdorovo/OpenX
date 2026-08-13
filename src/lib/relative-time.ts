@@ -1,22 +1,16 @@
 import { format, register } from 'timeago.js';
-import zhCN from 'timeago.js/lib/lang/zh_CN';
-import ja from 'timeago.js/lib/lang/ja';
 import ru from 'timeago.js/lib/lang/ru';
 
 let localesRegistered = false;
 
 function ensureTimeagoLocalesRegistered() {
   if (localesRegistered) return;
-  register('zh_CN', zhCN);
-  register('ja', ja);
   register('ru', ru);
   localesRegistered = true;
 }
 
 export function getTimeagoLocale(language?: string): string {
   const normalized = (language || '').toLowerCase();
-  if (normalized.startsWith('zh')) return 'zh_CN';
-  if (normalized.startsWith('ja')) return 'ja';
   if (normalized.startsWith('ru')) return 'ru';
   return 'en_US';
 }

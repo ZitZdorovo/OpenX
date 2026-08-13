@@ -6,7 +6,7 @@ if /i "%1"=="update" (
     echo.
     echo To update openclaw, update OpenX:
     echo   Open OpenX ^> Settings ^> Check for Updates
-    echo   Or download the latest version from https://claw-x.com
+    echo   Or download the latest version from https://github.com/ZitZdorovo/OpenX/releases
     exit /b 0
 )
 

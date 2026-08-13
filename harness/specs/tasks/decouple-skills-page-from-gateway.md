@@ -21,8 +21,6 @@ touchedAreas:
   - playground/clawhub-skillshub-gateway-analysis.md
   - playground/skills-page-decoupling-execution-plan.md
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
   - src/pages/Skills/index.tsx
   - src/stores/skills.ts
   - src/types/skill.ts

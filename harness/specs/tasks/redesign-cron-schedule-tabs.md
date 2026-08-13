@@ -19,9 +19,6 @@ touchedAreas:
   - tests/e2e/cron-skill-picker.spec.ts
   - tests/e2e/cron-schedule.spec.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
-  - README.ru-RU.md
 expectedUserBehavior:
   - The Create/Edit Task dialog no longer shows the preset schedule buttons; Schedule is split into a "Recurring" tab and a "Once" tab.
   - The Recurring tab exposes a frequency dropdown (Hourly, Daily, Weekdays, Weekly, Custom); Daily/Weekdays show a time, Weekly adds a weekday selector, Custom shows a cron expression field.

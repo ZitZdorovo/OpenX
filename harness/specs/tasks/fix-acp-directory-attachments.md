@@ -20,8 +20,6 @@ touchedAreas:
   - tests/e2e/fixtures/electron.ts
   - tests/e2e/chat-acp-attachments.spec.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - A dragged directory remains an enabled attachment after send instead of showing Attachment unavailable.
   - Clicking an available directory attachment opens it with the operating-system file manager.

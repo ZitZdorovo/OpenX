@@ -53,8 +53,6 @@ touchedAreas:
   - tests/e2e/fixtures/**
   - tests/e2e/chat-acp-process-timeline.spec.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Opening or revisiting a normal conversation renders its history only from ACP session/load replay, with the existing bounded ACP transcript supplements retained.
   - Sending and stopping from the composer use only ACP session/prompt and session/cancel.

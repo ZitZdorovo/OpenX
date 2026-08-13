@@ -58,8 +58,6 @@ touchedAreas:
   - tests/e2e/chat-file-changes.spec.ts
   - tests/e2e/fixtures/electron.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Successful OpenClaw write, edit, and apply_patch calls render per-turn file buttons and change summaries.
   - The Changes tab shows a session-level record grouped by file, with at most one diff editor per turn and file.

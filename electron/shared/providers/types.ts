@@ -118,6 +118,8 @@ export interface ProviderConfig {
   apiProtocol?: ProviderProtocol;
   headers?: Record<string, string>;
   model?: string;
+  fallbackModels?: string[];
+  fallbackProviderIds?: string[];
   enabled: boolean;
   createdAt: string;
   updatedAt: string;
@@ -180,6 +182,8 @@ export interface ProviderAccount {
   apiProtocol?: ProviderProtocol;
   headers?: Record<string, string>;
   model?: string;
+  fallbackModels?: string[];
+  fallbackAccountIds?: string[];
   enabled: boolean;
   isDefault: boolean;
   metadata?: {

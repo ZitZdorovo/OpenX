@@ -211,7 +211,7 @@
     "composer": {
         "attachFiles": "Прикрепить файлы",
         "pickSkill": "Выбрать Skill",
-        "skillButton": "Skills",
+        "skillButton": "Навыки",
         "skillPickerTitle": "Быстрый доступ к Skill для {{agent}}",
         "skillSearchPlaceholder": "Поиск Skill",
         "skillLoading": "Загрузка Skill...",

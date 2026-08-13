@@ -9,8 +9,6 @@ touchedAreas:
   - harness/specs/scenarios/chat-workspace-and-navigation.md
   - harness/specs/rules/session-workspace-authority.md
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
   - shared/i18n/locales/en/chat.json
   - shared/i18n/locales/zh/chat.json
   - shared/i18n/locales/ja/chat.json

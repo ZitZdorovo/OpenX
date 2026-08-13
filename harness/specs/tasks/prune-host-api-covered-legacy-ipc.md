@@ -6,8 +6,6 @@ taskType: runtime-bridge
 intent: Remove legacy direct IPC channels that are already covered by host:invoke/hostApi and are no longer invoked by renderer code.
 touchedAreas:
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
   - harness/**
   - electron/**
   - src/**

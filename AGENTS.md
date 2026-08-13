@@ -31,7 +31,7 @@ OpenX is a cross-platform Electron desktop client for an existing OpenClaw Gatew
 
 ## UI and code conventions
 
-- New user-facing text must use `react-i18next` in all four locales: `en`, `ru`, `zh`, and `ja`.
+- New user-facing text must use `react-i18next` in both supported locales: `en` and `ru`.
 - Use the surface, selection, and status tokens documented in `src/styles/globals.css`.
 - Keep the established OpenX layout and visual language. Do not redesign page structure unless the task explicitly requires it.
 - User-visible UI changes require a matching Electron Playwright scenario.

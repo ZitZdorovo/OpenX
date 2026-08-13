@@ -145,8 +145,39 @@ export function getProviderModelRef(config: ProviderConfig): string | undefined 
   }
 
   return defaultModel.startsWith(`${providerKey}/`)
-    ? defaultModel
-    : `${providerKey}/${defaultModel}`;
+      ? defaultModel
+      : `${providerKey}/${defaultModel}`;
+}
+
+export async function getProviderFallbackModelRefs(config: ProviderConfig): Promise<string[]> {
+  const allProviders = await getAllProviders();
+  const providerMap = new Map(allProviders.map((provider) => [provider.id, provider]));
+  const seen = new Set<string>();
+  const results: string[] = [];
+  const providerKey = getOpenClawProviderKey(config.type, config.id);
+
+  for (const fallbackModel of config.fallbackModels ?? []) {
+    const normalizedModel = fallbackModel.trim();
+    if (!normalizedModel) continue;
+    const modelRef = normalizedModel.startsWith(`${providerKey}/`)
+      ? normalizedModel
+      : `${providerKey}/${normalizedModel}`;
+    if (seen.has(modelRef)) continue;
+    seen.add(modelRef);
+    results.push(modelRef);
+  }
+
+  for (const fallbackId of config.fallbackProviderIds ?? []) {
+    if (!fallbackId || fallbackId === config.id) continue;
+    const fallbackProvider = providerMap.get(fallbackId);
+    if (!fallbackProvider) continue;
+    const modelRef = getProviderModelRef(fallbackProvider);
+    if (!modelRef || seen.has(modelRef)) continue;
+    seen.add(modelRef);
+    results.push(modelRef);
+  }
+
+  return results;
 }
 
 export async function syncProviderApiKeyToRuntime(
@@ -168,6 +199,8 @@ export async function syncAllProviderAuthToRuntime(): Promise<void> {
       type: account.vendorId,
       baseUrl: account.baseUrl,
       model: account.model,
+      fallbackModels: account.fallbackModels,
+      fallbackProviderIds: account.fallbackAccountIds,
       enabled: account.enabled,
       createdAt: account.createdAt,
       updatedAt: account.updatedAt,
@@ -483,6 +516,7 @@ export async function syncUpdatedProviderToRuntime(
   }
 
   const ock = context.runtimeProviderKey;
+  const fallbackModels = await getProviderFallbackModelRefs(config);
   const defaultProviderId = await getDefaultProvider();
   const isDefaultProvider = defaultProviderId === config.id;
   if (isDefaultProvider) {
@@ -495,16 +529,16 @@ export async function syncUpdatedProviderToRuntime(
           api: context.api,
           apiKeyEnv: context.meta?.apiKeyEnv,
           headers: config.headers ?? context.meta?.headers,
-        });
+        }, fallbackModels);
       } else {
-        await setOpenClawDefaultModel(ock, modelOverride);
+        await setOpenClawDefaultModel(ock, modelOverride, fallbackModels);
       }
     } else {
       await setOpenClawDefaultModelWithOverride(ock, modelOverride, {
         baseUrl: normalizeProviderBaseUrl(config, config.baseUrl, config.apiProtocol || 'openai-completions'),
         api: config.apiProtocol || 'openai-completions',
         headers: config.headers,
-      });
+      }, fallbackModels);
     }
   }
 
@@ -593,6 +627,7 @@ export async function syncDefaultProviderToRuntime(
 
   const ock = await resolveRuntimeProviderKey(provider);
   const providerKey = await getApiKey(providerId);
+  const fallbackModels = await getProviderFallbackModelRefs(provider);
   const oauthTypes = ['minimax-portal', 'minimax-portal-cn'];
   const browserOAuthRuntimeProvider = await getBrowserOAuthRuntimeProvider(provider);
   const isOAuthProvider = (oauthTypes.includes(provider.type) && !providerKey) || Boolean(browserOAuthRuntimeProvider);
@@ -607,7 +642,7 @@ export async function syncDefaultProviderToRuntime(
         baseUrl: normalizeProviderBaseUrl(provider, provider.baseUrl, provider.apiProtocol || 'openai-completions'),
         api: provider.apiProtocol || 'openai-completions',
         headers: provider.headers,
-      });
+      }, fallbackModels);
     } else if (shouldUseExplicitDefaultOverride(provider, ock)) {
       await setOpenClawDefaultModelWithOverride(ock, modelOverride, {
         baseUrl: normalizeProviderBaseUrl(
@@ -618,9 +653,9 @@ export async function syncDefaultProviderToRuntime(
         api: provider.apiProtocol || getProviderConfig(provider.type)?.api,
         apiKeyEnv: getProviderConfig(provider.type)?.apiKeyEnv,
         headers: provider.headers ?? getProviderConfig(provider.type)?.headers,
-      });
+      }, fallbackModels);
     } else {
-      await setOpenClawDefaultModel(ock, modelOverride);
+      await setOpenClawDefaultModel(ock, modelOverride, fallbackModels);
     }
 
     if (providerKey) {
@@ -654,6 +689,7 @@ export async function syncDefaultProviderToRuntime(
           baseUrl: OPENAI_CODEX_OAUTH_PROVIDER_CONFIG.baseUrl,
           api: OPENAI_CODEX_OAUTH_PROVIDER_CONFIG.api,
         },
+        fallbackModels.map((fallback) => fallback.replace(/^openai-codex\//, `${browserOAuthRuntimeProvider}/`)),
       );
       logger.info(`Configured openclaw.json for browser OAuth provider "${provider.id}"`);
       await syncAgentModelsToRuntime();
@@ -677,7 +713,7 @@ export async function syncDefaultProviderToRuntime(
       api,
       authHeader: targetProviderKey === 'minimax-portal' ? true : undefined,
       apiKeyEnv: targetProviderKey === 'minimax-portal' ? 'minimax-oauth' : 'qwen-oauth',
-    });
+    }, fallbackModels);
 
     logger.info(`Configured openclaw.json for OAuth provider "${provider.type}"`);
 

@@ -7,8 +7,6 @@ intent: Move Main-to-renderer host event payload typing into a shared contract s
 touchedAreas:
   - AGENTS.md
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
   - package.json
   - tsconfig.json
   - tsconfig.node.json

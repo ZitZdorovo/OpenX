@@ -6,8 +6,6 @@ taskType: runtime-bridge
 intent: Replace ad-hoc unknown-based host invoke typing with a function-shaped HostApiContract shared by the renderer facade, preload bridge, and Main host service registry.
 touchedAreas:
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
   - harness/**
   - electron/**
   - src/**

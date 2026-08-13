@@ -9,8 +9,6 @@ import { I18N_NAMESPACES, I18N_RESOURCES } from '@shared/i18n/resources';
 
 export const SUPPORTED_LANGUAGES = [
     { code: 'en', label: 'English' },
-    { code: 'zh', label: '中文' },
-    { code: 'ja', label: '日本語' },
     { code: 'ru', label: 'Русский' },
 ] as const satisfies ReadonlyArray<{ code: LanguageCode; label: string }>;
 

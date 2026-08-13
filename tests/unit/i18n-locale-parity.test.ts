@@ -166,8 +166,8 @@ const locales = listLocales();
 const referenceNamespaces = listNamespaces(REFERENCE_LOCALE);
 
 describe('i18n locale parity', () => {
-  it('discovers at least the four shipped locales (en, zh, ja, ru)', () => {
-    expect(locales).toEqual(expect.arrayContaining(['en', 'zh', 'ja', 'ru']));
+  it('ships only the English and Russian locales', () => {
+    expect(locales).toEqual(['en', 'ru']);
   });
 
   it.each(locales.filter((l) => l !== REFERENCE_LOCALE))(
@@ -222,7 +222,7 @@ describe('i18n locale parity', () => {
   });
 
   it('ships the complete local HTML preview contract without browser UI strings', () => {
-    for (const locale of ['en', 'zh', 'ja', 'ru'] as const) {
+    for (const locale of ['en', 'ru'] as const) {
       const chat = I18N_RESOURCES[locale].chat as JsonObject;
       expect(getValueAtPath(chat, 'artifactPanel.tabs.webBrowser')).toBeUndefined();
       expect(getValueAtPath(chat, 'artifactPanel.webBrowser')).toBeUndefined();

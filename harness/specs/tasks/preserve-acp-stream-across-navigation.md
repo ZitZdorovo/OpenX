@@ -6,8 +6,6 @@ taskType: runtime-bridge
 intent: Keep an in-flight ACP response live when users leave its conversation and return before the prompt completes.
 touchedAreas:
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
   - harness/specs/tasks/preserve-acp-stream-across-navigation.md
   - harness/reference/acp-chat.md
   - harness/specs/rules/acp-chat-state-and-history.md

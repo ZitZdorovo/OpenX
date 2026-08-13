@@ -61,10 +61,8 @@ function getLocaleAndTimezone(): { locale: string; timezone: string } {
   return { locale, timezone };
 }
 
-function isRegionOptimized(locale: string, timezone: string): boolean {
-  // Prefer timezone when available to reduce false positives from locale alone.
-  if (timezone) return timezone === 'Asia/Shanghai';
-  return locale === 'zh-CN';
+function isRegionOptimized(timezone: string): boolean {
+  return timezone === 'Asia/Shanghai';
 }
 
 function probeGoogle204(timeoutMs: number): Promise<boolean> {
@@ -101,7 +99,7 @@ function probeGoogle204(timeoutMs: number): Promise<boolean> {
 async function computeOptimization(): Promise<boolean> {
   const { locale, timezone } = getLocaleAndTimezone();
 
-  if (isRegionOptimized(locale, timezone)) {
+  if (isRegionOptimized(timezone)) {
     if (!loggedOnce) {
       logger.info(`Region optimization enabled via locale/timezone (locale=${locale || 'unknown'}, tz=${timezone || 'unknown'})`);
       loggedOnce = true;

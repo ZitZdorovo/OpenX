@@ -39,7 +39,8 @@
       "local": "Local"
     },
     "sections": {
-      "model": "Model Settings"
+      "model": "Model Settings",
+      "fallback": "Fallback Settings"
     },
     "add": "Add Provider",
     "custom": "Custom",
@@ -71,6 +72,12 @@
       "advancedConfig": "Advanced configuration",
       "userAgent": "User-Agent",
       "userAgentPlaceholder": "OpenX/1.0",
+      "fallbackModels": "Fallback Models",
+      "fallbackProviders": "Fallback Providers",
+      "fallbackModelIds": "Fallback Model IDs",
+      "fallbackModelIdsPlaceholder": "gpt-4.1-mini\nanother-model-id",
+      "fallbackModelIdsHelp": "One model ID per line. These models use the current provider config before falling back to other providers.",
+      "noFallbackOptions": "Add another provider first to use it as a fallback target.",
       "cancel": "Cancel",
       "change": "Change provider",
       "add": "Add Provider",
@@ -84,6 +91,8 @@
       "configured": "Configured",
       "noKey": "No API key set",
       "none": "None",
+      "fallbacks_one": "Fallback: {{names}}",
+      "fallbacks_other": "Fallbacks ({{count}}): {{names}}",
       "setDefault": "Set as default",
       "editKey": "Edit API key",
       "delete": "Delete provider"

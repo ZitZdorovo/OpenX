@@ -39,8 +39,6 @@ touchedAreas:
   - tests/e2e/chat-run-state-events.spec.ts
   - tests/e2e/chat-acp-process-timeline.spec.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Opening a Chat session loads history through ACP session/load replay.
   - Sending a Chat prompt uses ACP session/prompt, shows an optimistic user segment, and coalesces it with the ACP user echo.

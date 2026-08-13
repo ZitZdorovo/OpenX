@@ -38,8 +38,6 @@ touchedAreas:
   - tests/e2e/chat-acp-attachments.spec.ts
   - tests/e2e/chat-file-changes.spec.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Previewable local assistant attachments retain their primary in-app preview action and expose a separate Open with menu.
   - macOS and Windows list compatible applications with the default first, native icons when available, and a generic icon fallback.

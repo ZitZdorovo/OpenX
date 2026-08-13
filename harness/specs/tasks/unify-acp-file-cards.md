@@ -32,8 +32,6 @@ touchedAreas:
   - tests/e2e/chat-file-changes.spec.ts
   - tests/e2e/chat-acp-attachments.spec.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Created and modified file-activity rows keep Preview and Changes controls and add the same Open with menu used by eligible assistant attachments.
   - HTML file activity and eligible local HTML attachments put Open in built-in Preview first; selecting it opens and activates the Preview tab.

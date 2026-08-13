@@ -16,8 +16,6 @@ touchedAreas:
   - harness/specs/scenarios/chat-workspace-and-navigation.md
   - harness/specs/rules/session-workspace-authority.md
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
   - electron/**
   - shared/**
   - src/**

@@ -63,6 +63,10 @@ function isZaiProviderType(type: string | undefined): boolean {
   return type === 'zai' || type === 'zai-global';
 }
 
+function normalizeFallbackProviderIds(ids?: string[]): string[] {
+  return Array.from(new Set((ids ?? []).filter(Boolean)));
+}
+
 function getProtocolBaseUrlPlaceholder(
   apiProtocol: ProviderAccount['apiProtocol'],
 ): string {
@@ -70,6 +74,22 @@ function getProtocolBaseUrlPlaceholder(
     return 'https://api.example.com/anthropic';
   }
   return 'https://api.example.com/v1';
+}
+
+function fallbackProviderIdsEqual(a?: string[], b?: string[]): boolean {
+  const left = normalizeFallbackProviderIds(a).sort();
+  const right = normalizeFallbackProviderIds(b).sort();
+  return left.length === right.length && left.every((id, index) => id === right[index]);
+}
+
+function normalizeFallbackModels(models?: string[]): string[] {
+  return Array.from(new Set((models ?? []).map((model) => model.trim()).filter(Boolean)));
+}
+
+function fallbackModelsEqual(a?: string[], b?: string[]): boolean {
+  const left = normalizeFallbackModels(a);
+  const right = normalizeFallbackModels(b);
+  return left.length === right.length && left.every((model, index) => model === right[index]);
 }
 
 function getUserAgentHeader(headers?: Record<string, string>): string {
@@ -258,6 +278,7 @@ export function ProvidersSettings() {
             <ProviderCard
               key={item.account.id}
               item={item}
+              allProviders={displayProviders}
               isDefault={item.account.id === defaultAccountId}
               isEditing={editingProvider === item.account.id}
               onEdit={() => setEditingProvider(item.account.id)}
@@ -271,6 +292,10 @@ export function ProvidersSettings() {
                   if (payload.updates.apiProtocol !== undefined) updates.apiProtocol = payload.updates.apiProtocol;
                   if (payload.updates.headers !== undefined) updates.headers = payload.updates.headers;
                   if (payload.updates.model !== undefined) updates.model = payload.updates.model;
+                  if (payload.updates.fallbackModels !== undefined) updates.fallbackModels = payload.updates.fallbackModels;
+                  if (payload.updates.fallbackProviderIds !== undefined) {
+                    updates.fallbackAccountIds = payload.updates.fallbackProviderIds;
+                  }
                 }
                 await updateAccount(
                   item.account.id,
@@ -302,6 +327,7 @@ export function ProvidersSettings() {
 
 interface ProviderCardProps {
   item: ProviderListItem;
+  allProviders: ProviderListItem[];
   isDefault: boolean;
   isEditing: boolean;
   onEdit: () => void;
@@ -320,6 +346,7 @@ interface ProviderCardProps {
 
 function ProviderCard({
   item,
+  allProviders,
   isDefault,
   isEditing,
   onEdit,
@@ -337,7 +364,14 @@ function ProviderCard({
   const [apiProtocol, setApiProtocol] = useState<ProviderAccount['apiProtocol']>(account.apiProtocol || 'openai-completions');
   const [userAgent, setUserAgent] = useState(getUserAgentHeader(account.headers));
   const [modelId, setModelId] = useState(account.model || '');
+  const [fallbackModelsText, setFallbackModelsText] = useState(
+    normalizeFallbackModels(account.fallbackModels).join('\n')
+  );
+  const [fallbackProviderIds, setFallbackProviderIds] = useState<string[]>(
+    normalizeFallbackProviderIds(account.fallbackAccountIds)
+  );
   const [showKey, setShowKey] = useState(false);
+  const [showFallback, setShowFallback] = useState(false);
   const [validating, setValidating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [codePlanMode, setCodePlanMode] = useState<CodePlanMode>('apikey');
@@ -366,6 +400,8 @@ function ProviderCard({
       setApiProtocol(account.apiProtocol || 'openai-completions');
       setUserAgent(getUserAgentHeader(account.headers));
       setModelId(account.model || '');
+      setFallbackModelsText(normalizeFallbackModels(account.fallbackModels).join('\n'));
+      setFallbackProviderIds(normalizeFallbackProviderIds(account.fallbackAccountIds));
       setValidationError(null);
       setCodePlanMode(
         isCodePlanMode(
@@ -376,13 +412,24 @@ function ProviderCard({
         ) ? 'codeplan' : 'apikey'
       );
     }
-  }, [isEditing, account.baseUrl, account.headers, account.model, account.apiProtocol, account.vendorId, typeInfo?.codePlanPresetBaseUrl, typeInfo?.codePlanPresetModelId]);
+  }, [isEditing, account.baseUrl, account.headers, account.fallbackModels, account.fallbackAccountIds, account.model, account.apiProtocol, account.vendorId, typeInfo?.codePlanPresetBaseUrl, typeInfo?.codePlanPresetModelId]);
+
+  const fallbackOptions = allProviders.filter((candidate) => candidate.account.id !== account.id);
+
+  const toggleFallbackProvider = (providerId: string) => {
+    setFallbackProviderIds((current) => (
+      current.includes(providerId)
+        ? current.filter((id) => id !== providerId)
+        : [...current, providerId]
+    ));
+  };
 
   const handleSaveEdits = async () => {
     setSaving(true);
     setValidationError(null);
     try {
       const payload: { newApiKey?: string; updates?: Partial<ProviderConfig> } = {};
+      const normalizedFallbackModels = normalizeFallbackModels(fallbackModelsText.split('\n'));
       const normalizedNewKey = normalizeProviderApiKeyInput(newKey);
 
       if (normalizedNewKey) {
@@ -413,6 +460,12 @@ function ProviderCard({
         const nextUserAgent = userAgent.trim();
         if (nextUserAgent !== existingUserAgent) {
           updates.headers = mergeHeadersWithUserAgent(account.headers, nextUserAgent);
+        }
+        if (!fallbackModelsEqual(normalizedFallbackModels, account.fallbackModels)) {
+          updates.fallbackModels = normalizedFallbackModels;
+        }
+        if (!fallbackProviderIdsEqual(fallbackProviderIds, account.fallbackAccountIds)) {
+          updates.fallbackProviderIds = normalizeFallbackProviderIds(fallbackProviderIds);
         }
         if (Object.keys(updates).length > 0) {
           payload.updates = updates;
@@ -496,6 +549,19 @@ function ProviderCard({
                   <><div className="w-1.5 h-1.5 rounded-full bg-red-500" /> {t('aiProviders.dialog.apiKeyMissing')}</>
                 )}
               </span>
+              {((account.fallbackModels?.length ?? 0) > 0 || (account.fallbackAccountIds?.length ?? 0) > 0) && (
+                <>
+                  <span className="w-1 h-1 rounded-full bg-black/20 dark:bg-white/20" />
+                  <span className="truncate max-w-[150px]" title={t('aiProviders.sections.fallback')}>
+                    {t('aiProviders.sections.fallback')}: {[
+                      ...normalizeFallbackModels(account.fallbackModels),
+                      ...normalizeFallbackProviderIds(account.fallbackAccountIds)
+                        .map((fallbackId) => allProviders.find((candidate) => candidate.account.id === fallbackId)?.account.label)
+                        .filter(Boolean),
+                    ].join(', ')}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -683,6 +749,56 @@ function ProviderCard({
             </div>
           )}
           <div className="space-y-3">
+            <button
+              onClick={() => setShowFallback(!showFallback)}
+              className="flex items-center justify-between w-full text-sm font-bold text-foreground/80 hover:text-foreground transition-colors"
+            >
+              <span>{t('aiProviders.sections.fallback')}</span>
+              <ChevronDown className={cn("h-4 w-4 transition-transform", showFallback && "rotate-180")} />
+            </button>
+            {showFallback && (
+              <div className="space-y-3 pt-2">
+                <div className="space-y-1.5">
+                  <Label className={currentLabelClasses}>{t('aiProviders.dialog.fallbackModelIds')}</Label>
+                  <textarea
+                    value={fallbackModelsText}
+                    onChange={(e) => setFallbackModelsText(e.target.value)}
+                    placeholder={t('aiProviders.dialog.fallbackModelIdsPlaceholder')}
+                    className={isDefault
+                      ? "min-h-24 w-full rounded-xl border border-black/10 dark:border-white/10 bg-surface-modal px-3 py-2 text-meta font-mono outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 shadow-sm"
+                      : "min-h-24 w-full rounded-xl border border-black/10 dark:border-white/10 bg-transparent px-3 py-2 text-meta font-mono outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 focus-visible:border-blue-500 shadow-sm transition-all text-foreground placeholder:text-foreground/40"}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {t('aiProviders.dialog.fallbackModelIdsHelp')}
+                  </p>
+                </div>
+                <div className="space-y-2 pt-1">
+                  <Label className={currentLabelClasses}>{t('aiProviders.dialog.fallbackProviders')}</Label>
+                  {fallbackOptions.length === 0 ? (
+                    <p className="text-meta text-muted-foreground">{t('aiProviders.dialog.noFallbackOptions')}</p>
+                  ) : (
+                    <div className={cn("space-y-2 rounded-xl border border-black/10 dark:border-white/10 p-3 shadow-sm", isDefault ? "bg-surface-modal" : "bg-transparent")}>
+                      {fallbackOptions.map((candidate) => (
+                        <label key={candidate.account.id} className="flex items-center gap-3 text-meta cursor-pointer group/label">
+                          <input
+                            type="checkbox"
+                            checked={fallbackProviderIds.includes(candidate.account.id)}
+                            onChange={() => toggleFallbackProvider(candidate.account.id)}
+                            className="rounded border-black/20 dark:border-white/20 text-blue-500 focus:ring-blue-500/50"
+                          />
+                          <span className="font-medium group-hover/label:text-blue-500 transition-colors">{candidate.account.label}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {candidate.account.model || candidate.vendor?.name || candidate.account.vendorId}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div className="space-y-0.5">
                 <Label className={currentSectionLabelClasses}>{t('aiProviders.dialog.apiKey')}</Label>
@@ -752,6 +868,8 @@ function ProviderCard({
                       !newKey.trim()
                       && (baseUrl.trim() || undefined) === (account.baseUrl || undefined)
                       && userAgent.trim() === getUserAgentHeader(account.headers).trim()
+                      && fallbackModelsEqual(normalizeFallbackModels(fallbackModelsText.split('\n')), account.fallbackModels)
+                      && fallbackProviderIdsEqual(fallbackProviderIds, account.fallbackAccountIds)
                     )
                   }
                 >

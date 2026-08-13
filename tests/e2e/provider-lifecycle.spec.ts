@@ -311,7 +311,6 @@ test.describe('OpenX provider lifecycle', () => {
     await page.getByTestId('provider-card-moonshot-edit').hover();
     await page.getByTestId('provider-edit-moonshot-edit').click();
 
-    await expect(page.getByText('Fallback Settings', { exact: true })).toHaveCount(0);
     await expect(page.getByTestId('provider-edit-model-id-moonshot-edit')).toBeDisabled();
     await expect(page.getByTestId('provider-edit-model-id-moonshot-edit')).toHaveValue('kimi-k2.6');
     await expect(page.getByTestId('provider-edit-model-id-help-moonshot-edit')).toContainText(

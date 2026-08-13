@@ -145,8 +145,8 @@ describe('provider metadata', () => {
     expect(getProviderDocsUrl(custom, 'en')).toBe(
       'https://icnnp7d0dymg.feishu.cn/wiki/BmiLwGBcEiloZDkdYnGc8RWnn6d#Ee1ldfvKJoVGvfxc32mcILwenth'
     );
-    expect(getProviderDocsUrl(custom, 'zh-CN')).toBe(
-      'https://icnnp7d0dymg.feishu.cn/wiki/BmiLwGBcEiloZDkdYnGc8RWnn6d#IWQCdfe5fobGU3xf3UGcgbLynGh'
+    expect(getProviderDocsUrl(custom, 'ru')).toBe(
+      'https://icnnp7d0dymg.feishu.cn/wiki/BmiLwGBcEiloZDkdYnGc8RWnn6d#Ee1ldfvKJoVGvfxc32mcILwenth'
     );
   });
 

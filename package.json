@@ -30,6 +30,14 @@
         }
     },
     "description": "OpenX - Remote desktop client for OpenClaw Gateway",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ZitZdorovo/OpenX.git"
+    },
+    "homepage": "https://github.com/ZitZdorovo/OpenX#readme",
+    "bugs": {
+        "url": "https://github.com/ZitZdorovo/OpenX/issues"
+    },
     "main": "dist-electron/main/index.js",
     "author": "OpenX Team",
     "license": "MIT",

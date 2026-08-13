@@ -13,8 +13,6 @@ touchedAreas:
   - tests/unit/gateway-manager-heartbeat.test.ts
   - tests/unit/gateway-manager-diagnostics.test.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Long-running model, tool, and scheduled tasks are not interrupted solely because Gateway pong frames are delayed.
   - Consecutive heartbeat misses still mark Gateway health as unresponsive and remain visible in diagnostics.

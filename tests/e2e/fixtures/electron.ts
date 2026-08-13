@@ -1,7 +1,7 @@
 import electronBinaryPath from 'electron';
 import { _electron as electron, expect, test as base, type ElectronApplication, type Page } from '@playwright/test';
 import { build as buildWithEsbuild } from 'esbuild';
-import { access, mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -232,17 +232,22 @@ async function closeElectronApp(app: ElectronApplication, timeoutMs = 5_000): Pr
   }
 }
 
-async function seedE2eSettings(userDataDir: string): Promise<void> {
+async function seedE2eSettings(userDataDir: string, setupComplete: boolean): Promise<void> {
   const settingsPath = join(userDataDir, 'settings.json');
+  let settings: Record<string, unknown> = {};
   try {
     await access(settingsPath);
-    return;
+    settings = JSON.parse(await readFile(settingsPath, 'utf-8')) as Record<string, unknown>;
   } catch {
     // Seed only once per isolated profile. Tests that switch language should
     // keep their persisted setting across relaunches in the same profile.
   }
 
-  await writeFile(settingsPath, JSON.stringify({ language: 'en' }, null, 2), 'utf-8');
+  await writeFile(settingsPath, JSON.stringify({
+    language: 'en',
+    ...settings,
+    ...(setupComplete ? { setupComplete: true } : {}),
+  }, null, 2), 'utf-8');
 }
 
 async function launchOpenXElectron(
@@ -253,7 +258,7 @@ async function launchOpenXElectron(
   if (options.additionalArgs?.some((arg) => arg.startsWith('--use-fake-ui-for-media-stream'))) {
     throw new Error('Electron E2E must not bypass application media permission prompts');
   }
-  await seedE2eSettings(userDataDir);
+  await seedE2eSettings(userDataDir, options.skipSetup === true);
   const hostApiPort = await allocatePort();
   const electronEnv = process.platform === 'linux'
     ? {
@@ -277,7 +282,6 @@ async function launchOpenXElectron(
       LANGUAGE: 'en',
       OPENX_E2E: '1',
       OPENX_USER_DATA_DIR: userDataDir,
-      ...(options.skipSetup ? { OPENX_E2E_SKIP_SETUP: '1' } : {}),
       OPENX_PORT_OPENX_HOST_API: String(hostApiPort),
     },
     timeout: 90_000,

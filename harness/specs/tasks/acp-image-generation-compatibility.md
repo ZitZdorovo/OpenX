@@ -28,8 +28,6 @@ touchedAreas:
   - shared/i18n/locales/ja/chat.json
   - shared/i18n/locales/ru/chat.json
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - ACP Chat first shows the image_generate background task start tool result.
   - After the normal thinking state ends, the composer shows a distinct image-generation indicator until the generated image or a failure reply is rendered, including after switching away from and back to the conversation; users may edit a draft while another send is prevented.

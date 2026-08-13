@@ -198,7 +198,7 @@ describe('project sidebar pin and delete behavior', () => {
     expect(screen.queryByTestId('sidebar-session-list-drop-indicator')).not.toBeInTheDocument();
   });
 
-  it('renames the already active chat with one click', () => {
+  it('does not rename the active chat on click or double click', () => {
     useChatStore.setState({
       sessions: [{ key: 'agent:main:active', displayName: 'Active chat', updatedAt: Date.now() }],
       currentSessionKey: 'agent:main:active',
@@ -213,9 +213,9 @@ describe('project sidebar pin and delete behavior', () => {
       maskImage: 'linear-gradient(to right, black calc(100% - 28px), transparent)',
     });
     fireEvent.click(activeChat);
+    fireEvent.doubleClick(activeChat);
 
-    expect(screen.getByTestId('sidebar-chat-rename-input')).toBeInTheDocument();
-    expect(screen.getByTestId('sidebar-chat-rename-input')).toHaveValue('Active chat');
+    expect(screen.queryByTestId('sidebar-chat-rename-input')).not.toBeInTheDocument();
   });
 
   it('renders pinned projects and folders only in the pinned section', () => {

@@ -35,8 +35,6 @@ touchedAreas:
   - tests/e2e/chat-table-header-light.spec.ts
   - tests/e2e/renderer-performance.spec.ts
   - README.md
-  - README.zh-CN.md
-  - README.ja-JP.md
 expectedUserBehavior:
   - Assistant and process Markdown renders incrementally during ACP Chat streaming, while completed blocks remain stable and only the active final Markdown part receives subtle word animation and a circle caret.
   - Markdown files render in static mode with highlighted fenced code, KaTeX math, CJK-aware parsing, and omitted YAML or TOML frontmatter; Mermaid fences remain code.
