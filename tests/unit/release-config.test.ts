@@ -27,4 +27,14 @@ describe('release configuration', () => {
       expect(existsSync(join(root, relativePath)), `Missing release resource: ${relativePath}`).toBe(true);
     }
   });
+
+  it('does not expose empty macOS secrets as electron-builder signing variables', () => {
+    const workflow = readFileSync(join(process.cwd(), '.github/workflows/release.yml'), 'utf8');
+
+    expect(workflow).not.toMatch(/^\s+CSC_LINK:\s*\$\{\{\s*secrets\./m);
+    expect(workflow).not.toMatch(/^\s+CSC_KEY_PASSWORD:\s*\$\{\{\s*secrets\./m);
+    expect(workflow).not.toMatch(/^\s+APPLE_ID:\s*\$\{\{\s*secrets\./m);
+    expect(workflow).toContain('CSC_IDENTITY_AUTO_DISCOVERY=false');
+    expect(workflow).toContain('export CSC_LINK="$OPENX_MAC_CERTS"');
+  });
 });

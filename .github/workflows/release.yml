@@ -92,14 +92,30 @@ jobs:
 
       - name: Build macOS packages
         if: matrix.platform == 'mac'
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CSC_LINK: ${{ secrets.MAC_CERTS }}
-          CSC_KEY_PASSWORD: ${{ secrets.MAC_CERTS_PASSWORD }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: pnpm run package:mac
+          OPENX_MAC_CERTS: ${{ secrets.MAC_CERTS }}
+          OPENX_MAC_CERTS_PASSWORD: ${{ secrets.MAC_CERTS_PASSWORD }}
+          OPENX_APPLE_ID: ${{ secrets.APPLE_ID }}
+          OPENX_APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          OPENX_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [[ -n "${OPENX_MAC_CERTS:-}" ]]; then
+            export CSC_LINK="$OPENX_MAC_CERTS"
+            export CSC_KEY_PASSWORD="${OPENX_MAC_CERTS_PASSWORD:-}"
+          else
+            export CSC_IDENTITY_AUTO_DISCOVERY=false
+            echo "No macOS signing certificate configured; building unsigned packages."
+          fi
+
+          if [[ -n "${OPENX_APPLE_ID:-}" && -n "${OPENX_APPLE_APP_SPECIFIC_PASSWORD:-}" && -n "${OPENX_APPLE_TEAM_ID:-}" ]]; then
+            export APPLE_ID="$OPENX_APPLE_ID"
+            export APPLE_APP_SPECIFIC_PASSWORD="$OPENX_APPLE_APP_SPECIFIC_PASSWORD"
+            export APPLE_TEAM_ID="$OPENX_APPLE_TEAM_ID"
+          fi
+
+          pnpm run package:mac
 
       - name: Build Windows packages
         if: matrix.platform == 'win'
