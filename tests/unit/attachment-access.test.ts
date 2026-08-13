@@ -1,6 +1,7 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { lstat, mkdir, mkdtemp, open, realpath, rename, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { join, resolve } from 'node:path';
@@ -19,6 +20,22 @@ import {
   resolveOpenClawConfigPath,
   resolveOpenClawStateDir,
 } from '../../electron/utils/paths';
+
+function canCreateSymbolicLinks(): boolean {
+  const probeDir = mkdtempSync(join(tmpdir(), 'openx-symlink-probe-'));
+  try {
+    const target = join(probeDir, 'target.txt');
+    writeFileSync(target, 'probe');
+    symlinkSync(target, join(probeDir, 'link.txt'), 'file');
+    return true;
+  } catch {
+    return false;
+  } finally {
+    rmSync(probeDir, { recursive: true, force: true });
+  }
+}
+
+const symlinkTest = canCreateSymbolicLinks() ? it : it.skip;
 
 describe('attachment access boundary', () => {
   const sessionKey = 'agent:main:session-a';
@@ -142,7 +159,7 @@ describe('attachment access boundary', () => {
     }
   });
 
-  it('resolves workspace root across rename and symlink replacement', async () => {
+  symlinkTest('resolves workspace root across rename and symlink replacement', async () => {
     const originalWorkspace = join(testDir, 'workspace-original');
     await rename(workspaceRoot, originalWorkspace);
     await symlink(outsideDir, workspaceRoot);
@@ -151,7 +168,7 @@ describe('attachment access boundary', () => {
       .resolves.toMatchObject({ ok: true });
   });
 
-  it.each(['state-external', 'state-sibling', 'config-external', 'config-sibling'])(
+  symlinkTest.each(['state-external', 'state-sibling', 'config-external', 'config-sibling'])(
     'resolves files through a symlinked managed media root targeting %s',
     async (scenario) => {
       const isState = scenario.startsWith('state');
@@ -172,7 +189,7 @@ describe('attachment access boundary', () => {
     },
   );
 
-  it.each(['state', 'config'])('resolves through renamed and symlinked %s parent', async (kind) => {
+  symlinkTest.each(['state', 'config'])('resolves through renamed and symlinked %s parent', async (kind) => {
     const parent = kind === 'state' ? stateDir : configDir;
     const originalParent = `${parent}-original`;
     const replacementParent = join(testDir, `${kind}-replacement`);
@@ -396,7 +413,7 @@ describe('attachment access boundary', () => {
       .resolves.toMatchObject({ ok: false, error });
   });
 
-  it('resolves files through symlink escapes', async () => {
+  symlinkTest('resolves files through symlink escapes', async () => {
     await symlink(join(outsideDir, 'secret.txt'), join(workspaceRoot, 'escape.txt'));
 
     await expect(getAccess().resolveAttachment({ ref: ref(join(workspaceRoot, 'escape.txt')) }))

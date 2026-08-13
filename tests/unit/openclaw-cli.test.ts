@@ -102,7 +102,7 @@ describe('getOpenClawCliCommand (Windows packaged)', () => {
     mockExistsSync.mockImplementation((p: string) => /[\\/]cli[\\/]openclaw\.cmd$/i.test(p) || /[\\/]bin[\\/]node\.exe$/i.test(p));
     const { getOpenClawCliCommand } = await import('@electron/utils/openclaw-cli');
     expect(getOpenClawCliCommand()).toBe(
-      "& 'C:\\Program Files\\OpenX\\resources/cli/openclaw.cmd'",
+      "& 'C:\\Program Files\\OpenX\\resources\\cli\\openclaw.cmd'",
     );
   });
 
@@ -110,7 +110,7 @@ describe('getOpenClawCliCommand (Windows packaged)', () => {
     mockExistsSync.mockImplementation((p: string) => /[\\/]bin[\\/]node\.exe$/i.test(p));
     const { getOpenClawCliCommand } = await import('@electron/utils/openclaw-cli');
     expect(getOpenClawCliCommand()).toBe(
-      "& 'C:\\Program Files\\OpenX\\resources/bin/node.exe' 'C:\\Program Files\\OpenX\\resources\\openclaw\\openclaw.mjs'",
+      "& 'C:\\Program Files\\OpenX\\resources\\bin\\node.exe' 'C:\\Program Files\\OpenX\\resources\\openclaw\\openclaw.mjs'",
     );
   });
 
@@ -147,13 +147,13 @@ describe('getOpenClawCliSpawnSpec', () => {
     const comSpecPath = 'C:\\Windows\\System32\\cmd.exe';
     setPlatform('win32');
     process.env.ComSpec = comSpecPath;
-    mockExistsSync.mockImplementation((p: string) => p === '/tmp/.bin/openclaw.cmd');
+    mockExistsSync.mockImplementation((p: string) => /[\\/]tmp[\\/]\.bin[\\/]openclaw\.cmd$/i.test(p));
 
     const { getOpenClawCliSpawnSpec } = await import('@electron/utils/openclaw-cli');
     const spec = getOpenClawCliSpawnSpec();
 
     expect(spec.command).toBe(comSpecPath);
-    expect(spec.args).toEqual(['/d', '/s', '/c', '"/tmp/.bin/openclaw.cmd"']);
+    expect(spec.args).toEqual(['/d', '/s', '/c', '"\\tmp\\.bin\\openclaw.cmd"']);
     expect(spec.shell).not.toBe(true);
   });
 
@@ -179,7 +179,7 @@ describe('getOpenClawCliSpawnSpec', () => {
     const spec = getOpenClawCliSpawnSpec();
 
     expect(spec.command).toBe(process.env.ComSpec || 'cmd.exe');
-    expect(spec.args).toEqual(['/d', '/s', '/c', '"C:\\Program Files\\OpenX\\resources/cli/openclaw.cmd"']);
+    expect(spec.args).toEqual(['/d', '/s', '/c', '"C:\\Program Files\\OpenX\\resources\\cli\\openclaw.cmd"']);
     expect(spec.shell).not.toBe(true);
   });
 
@@ -208,7 +208,7 @@ describe('getOpenClawCliSpawnSpec', () => {
     const { getOpenClawCliSpawnSpec } = await import('@electron/utils/openclaw-cli');
     const spec = getOpenClawCliSpawnSpec();
 
-    expect(spec.command).toBe('C:\\Program Files\\OpenX\\resources/bin/node.exe');
+    expect(spec.command).toBe('C:\\Program Files\\OpenX\\resources\\bin\\node.exe');
     expect(spec.args).toEqual([mockedEntryPath]);
     expect(spec.shell).toBeUndefined();
     expect(spec.env).toBeUndefined();

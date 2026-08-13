@@ -10,7 +10,6 @@ import path from 'node:path';
 import { existsSync, cpSync, copyFileSync, statSync, lstatSync, mkdirSync, readFileSync, writeFileSync, readdirSync, realpathSync, symlinkSync, unlinkSync } from 'node:fs';
 import { readdir, stat, copyFile, mkdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
 import { logger } from './logger';
 import { getOpenClawResolvedDir } from './paths';
 import { safeRmSync } from './safe-fs';
@@ -20,6 +19,12 @@ import {
   ensureOpenClawStateDirExists,
 } from './plugin-install-index';
 import { mutateOpenClawConfig } from '../gateway/config-delivery';
+
+function runtimePath() {
+  return process.platform === 'win32' ? path.win32 : path.posix;
+}
+
+const join = (...parts: string[]): string => runtimePath().join(...parts);
 
 function normalizeFsPathForWindows(filePath: string): string {
   if (process.platform !== 'win32') return filePath;
@@ -323,9 +328,9 @@ type TrustedOfficialPluginInstallRecord = Record<string, unknown> & {
 function normalizePluginInstallPathForRecord(targetDir: string): string | null {
   try {
     const resolved = realpathSync(targetDir);
-    return path.normalize(resolved);
+    return runtimePath().normalize(resolved);
   } catch {
-    return path.normalize(targetDir);
+    return runtimePath().normalize(targetDir);
   }
 }
 
@@ -411,7 +416,7 @@ function canonicalComparablePath(filePath: string): string {
   try {
     resolved = realpathSync(fsPath(filePath));
   } catch {
-    resolved = path.resolve(filePath);
+    resolved = runtimePath().resolve(filePath);
   }
   const withoutLongPathPrefix = resolved.replace(/^\\\\\?\\UNC\\/i, '\\\\').replace(/^\\\\\?\\/i, '');
   return process.platform === 'win32' ? withoutLongPathPrefix.toLowerCase() : withoutLongPathPrefix;

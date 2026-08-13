@@ -13,9 +13,20 @@ import {
 } from 'node:fs';
 import { spawn, type ForkOptions } from 'node:child_process';
 import { homedir } from 'node:os';
-import { delimiter, join, dirname } from 'node:path';
+import { posix, win32 } from 'node:path';
 import { getOpenClawDir, getOpenClawEntryPath } from './paths';
 import { logger } from './logger';
+
+function runtimePath() {
+  return process.platform === 'win32' ? win32 : posix;
+}
+
+function runtimePathDelimiter(): string {
+  return process.platform === 'win32' ? win32.delimiter : posix.delimiter;
+}
+
+const join = (...parts: string[]): string => runtimePath().join(...parts);
+const dirname = (value: string): string => runtimePath().dirname(value);
 
 // ── Quoting helpers ──────────────────────────────────────────────────────────
 
@@ -126,7 +137,7 @@ function getWindowsCmdWrapperSpawnSpec(cmdPath: string): OpenClawCliSpawnSpec {
 
 function getExecutableFromPath(command: string): string | null {
   const pathEnv = process.env.PATH || '';
-  for (const dir of pathEnv.split(delimiter)) {
+  for (const dir of pathEnv.split(runtimePathDelimiter())) {
     if (!dir) continue;
     const candidate = join(dir, command);
     if (fileExists(candidate)) return candidate;

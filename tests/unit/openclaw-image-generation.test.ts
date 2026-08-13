@@ -59,6 +59,28 @@ async function readOpenClawJson(): Promise<Record<string, unknown>> {
   return JSON.parse(content) as Record<string, unknown>;
 }
 
+async function registerRunningConfig(initial: Record<string, unknown>) {
+  let runningConfig = structuredClone(initial);
+  let revision = 0;
+  const manager = {
+    getStatus: vi.fn(() => ({ state: 'running' as const })),
+    rpc: vi.fn(async (method: string, params: unknown) => {
+      if (method === 'config.get') {
+        return { config: structuredClone(runningConfig), hash: `hash-${revision}` };
+      }
+      if (method === 'config.set') {
+        runningConfig = JSON.parse((params as { raw: string }).raw) as Record<string, unknown>;
+        revision += 1;
+        return { ok: true };
+      }
+      throw new Error(`Unexpected RPC method: ${method}`);
+    }),
+  };
+  const { registerOpenClawConfigCoordinator } = await import('@electron/gateway/config-delivery');
+  registerOpenClawConfigCoordinator(manager);
+  return { manager, read: () => structuredClone(runningConfig) };
+}
+
 describe('openclaw-image-generation helpers', () => {
   beforeEach(async () => {
     vi.resetModules();
@@ -81,7 +103,7 @@ describe('openclaw-image-generation helpers', () => {
   });
 
   it('reads and writes agents.defaults.imageGenerationModel', async () => {
-    await writeOpenClawJson({
+    const running = await registerRunningConfig({
       agents: {
         defaults: {
           model: { primary: 'openai/gpt-4o' },
@@ -106,7 +128,7 @@ describe('openclaw-image-generation helpers', () => {
       timeoutMs: 120_000,
     });
 
-    const saved = await readOpenClawJson();
+    const saved = running.read();
     const defaults = (saved.agents as Record<string, unknown>).defaults as Record<string, unknown>;
     expect(defaults.imageGenerationModel).toEqual({
       primary: 'openai/gpt-image-2',
@@ -123,7 +145,7 @@ describe('openclaw-image-generation helpers', () => {
   });
 
   it('preserves non-UI image model fields when updating image generation settings', async () => {
-    await writeOpenClawJson({
+    const running = await registerRunningConfig({
       agents: {
         defaults: {
           imageGenerationModel: {
@@ -142,7 +164,7 @@ describe('openclaw-image-generation helpers', () => {
       timeoutMs: null,
     });
 
-    const saved = await readOpenClawJson();
+    const saved = running.read();
     const defaults = (saved.agents as Record<string, unknown>).defaults as Record<string, unknown>;
     expect(defaults.imageGenerationModel).toEqual({
       primary: 'openai/gpt-image-2',

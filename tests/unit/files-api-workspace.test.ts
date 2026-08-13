@@ -1,9 +1,26 @@
 // @vitest-environment node
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { mkdir, mkdtemp, open, readdir, realpath, rename, rm, stat, symlink, truncate, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+
+function canCreateSymbolicLinks(): boolean {
+  const probeDir = mkdtempSync(join(tmpdir(), 'openx-symlink-probe-'));
+  try {
+    const target = join(probeDir, 'target.txt');
+    writeFileSync(target, 'probe');
+    symlinkSync(target, join(probeDir, 'link.txt'), 'file');
+    return true;
+  } catch {
+    return false;
+  } finally {
+    rmSync(probeDir, { recursive: true, force: true });
+  }
+}
+
+const symlinkTest = canCreateSymbolicLinks() ? it : it.skip;
 
 const mocks = vi.hoisted(() => ({
   home: '',
@@ -82,7 +99,7 @@ describe('workspace-scoped files api', () => {
     });
   }
 
-  it('registers staged file and directory ids with Main-owned source storage', async () => {
+  symlinkTest('registers staged file and directory ids with Main-owned source storage', async () => {
     const { StagedAttachmentRegistry } = await import('../../electron/services/attachment-access');
     const { createFilesApi } = await import('../../electron/services/files-api');
     const stagedAttachments = new StagedAttachmentRegistry();
@@ -178,7 +195,7 @@ describe('workspace-scoped files api', () => {
     expect(mocks.openPath).not.toHaveBeenCalled();
   });
 
-  it('rejects non-files, traversal, and symlink escapes for every workspace native action', async () => {
+  symlinkTest('rejects non-files, traversal, and symlink escapes for every workspace native action', async () => {
     const outsideDir = join(testDir, 'native-action-outside');
     await mkdir(outsideDir);
     await writeFile(join(outsideDir, 'secret.txt'), 'secret');
@@ -202,7 +219,7 @@ describe('workspace-scoped files api', () => {
     expect(mocks.showItemInFolder).not.toHaveBeenCalled();
   });
 
-  it('revalidates the workspace target after handler selection and before native open', async () => {
+  symlinkTest('revalidates the workspace target after handler selection and before native open', async () => {
     const target = join(workspaceRoot, 'open-with-race.txt');
     const outsideTarget = join(testDir, 'open-with-race-secret.txt');
     await writeFile(target, 'safe');
@@ -325,7 +342,7 @@ describe('workspace-scoped files api', () => {
     expect(mocks.showItemInFolder).not.toHaveBeenCalled();
   });
 
-  it('rejects existing targets and parent symlinks that escape the root', async () => {
+  symlinkTest('rejects existing targets and parent symlinks that escape the root', async () => {
     const outsideDir = join(testDir, 'outside');
     await mkdir(outsideDir);
     await writeFile(join(outsideDir, 'secret.txt'), 'secret');
@@ -363,7 +380,7 @@ describe('workspace-scoped files api', () => {
       .resolves.toMatchObject({ ok: false, error: 'tooLarge', size: 17 });
   });
 
-  it('does not read a replacement swapped in after path stat', async () => {
+  symlinkTest('does not read a replacement swapped in after path stat', async () => {
     const parent = join(workspaceRoot, 'stat-race');
     const movedParent = join(workspaceRoot, 'stat-race-original');
     const outsideParent = join(testDir, 'stat-race-outside');
@@ -389,7 +406,7 @@ describe('workspace-scoped files api', () => {
     expect(JSON.stringify(result)).not.toContain(outsideParent);
   });
 
-  it('rejects a parent swapped outside after validation but before file open', async () => {
+  symlinkTest('rejects a parent swapped outside after validation but before file open', async () => {
     const parent = join(workspaceRoot, 'open-race');
     const movedParent = join(workspaceRoot, 'open-race-original');
     const outsideParent = join(testDir, 'open-race-outside');

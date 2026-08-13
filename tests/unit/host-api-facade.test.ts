@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 const hostInvoke = vi.fn();
 
@@ -619,10 +619,10 @@ describe('hostApi facade', () => {
     };
 
     const findViolations = (root: string, patterns: RegExp[]): string[] => collectFiles(root).flatMap((file) => {
-      const relative = file.replace(`${process.cwd()}/`, '');
+      const relativePath = relative(process.cwd(), file).replaceAll('\\', '/');
       const text = readFileSync(file, 'utf8');
       return patterns.flatMap((pattern) => (
-        [...text.matchAll(pattern)].map((match) => `${relative}: ${match[0]}`)
+        [...text.matchAll(pattern)].map((match) => `${relativePath}: ${match[0]}`)
       ));
     });
 

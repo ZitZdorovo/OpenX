@@ -86,6 +86,14 @@ describe('cron session history', () => {
     const job = makeGatewayJob({ kind: 'cron', expr: '* * * * *' });
     const rpc = vi.fn(async (method: string) => {
       if (method === 'cron.list') return { jobs: [job] };
+      if (method === 'chat.history') {
+        return {
+          messages: [
+            { role: 'user', content: 'hi' },
+            { role: 'assistant', content: [{ type: 'text', text: fullReply }], stopReason: 'stop' },
+          ],
+        };
+      }
       if (method === 'cron.runs') {
         return {
           entries: [{
@@ -130,6 +138,14 @@ describe('cron session history', () => {
     const fullReply = `${summaryPrefix}${'B'.repeat(500)}`;
     const rpc = vi.fn(async (method: string) => {
       if (method === 'cron.list') return { jobs: [job] };
+      if (method === 'chat.history') {
+        return {
+          messages: [
+            { role: 'user', content: 'hi' },
+            { role: 'assistant', content: [{ type: 'text', text: fullReply }], stopReason: 'stop' },
+          ],
+        };
+      }
       if (method === 'cron.runs') {
         return {
           entries: [{
@@ -147,10 +163,6 @@ describe('cron session history', () => {
       }
       return {};
     });
-    sessionMocks.loadSessionTranscriptByKey.mockResolvedValue([
-      { role: 'user', content: 'hi' },
-      { role: 'assistant', content: [{ type: 'text', text: fullReply }], stopReason: 'stop' },
-    ]);
     const api = createCronApi({ gatewayManager: { rpc } as unknown as GatewayManager });
 
     const result = await api.sessionHistory({
@@ -158,10 +170,10 @@ describe('cron session history', () => {
       limit: 200,
     });
 
-    expect(sessionMocks.loadSessionTranscriptByKey).toHaveBeenCalledWith(
-      'agent:main:cron:job-1:run:run-session-1',
-      1000,
-    );
+    expect(rpc).toHaveBeenCalledWith('chat.history', {
+      sessionKey: 'agent:main:cron:job-1:run:run-session-1',
+      limit: 1000,
+    });
     expect(result.messages?.[1]).toMatchObject({
       role: 'assistant',
       content: `${fullReply}\n\nDuration: 5.0s | Model: provider-a/model-a`,
@@ -174,6 +186,9 @@ describe('cron session history', () => {
     const runSessionKey = 'agent:main:cron:job-1:run:run-session-1';
     const rpc = vi.fn(async (method: string) => {
       if (method === 'cron.list') return { jobs: [job] };
+      if (method === 'chat.history') {
+        return { messages: [{ role: 'assistant', content: `${'X'.repeat(2000)}more` }] };
+      }
       if (method === 'cron.runs') {
         return {
           entries: [{
@@ -188,9 +203,6 @@ describe('cron session history', () => {
       }
       return {};
     });
-    sessionMocks.loadSessionTranscriptByKey.mockResolvedValue([
-      { role: 'assistant', content: `${'X'.repeat(2000)}more` },
-    ]);
     const api = createCronApi({ gatewayManager: { rpc } as unknown as GatewayManager });
 
     const result = await api.sessionHistory({
@@ -198,7 +210,7 @@ describe('cron session history', () => {
       limit: 200,
     });
 
-    expect(sessionMocks.loadSessionTranscriptByKey).toHaveBeenCalledWith(runSessionKey, 1000);
+    expect(rpc).toHaveBeenCalledWith('chat.history', { sessionKey: runSessionKey, limit: 1000 });
     expect(result.messages?.[1]).toMatchObject({ role: 'assistant', content: summary });
   });
 });

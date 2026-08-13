@@ -2,6 +2,10 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  registerOpenClawConfigCoordinator,
+  resetOpenClawConfigCoordinatorForTests,
+} from '@electron/gateway/config-delivery';
 
 const {
   applyProxySettingsMock,
@@ -308,9 +312,35 @@ const baseSettings = {
   recentWorkspacePaths: ['~/.openclaw/workspace'],
 };
 
+let authoritativeConfig: Record<string, unknown> = {};
+let configRevision = 0;
+const coordinatorManager = {
+  getStatus: () => ({ state: 'running' as const }),
+  rpc: vi.fn(async (method: string, params: unknown) => {
+    if (method === 'config.get') {
+      return {
+        config: structuredClone(authoritativeConfig),
+        hash: `test-hash-${configRevision}`,
+      };
+    }
+    if (method === 'config.set') {
+      authoritativeConfig = JSON.parse((params as { raw: string }).raw) as Record<string, unknown>;
+      configRevision += 1;
+      return { ok: true };
+    }
+    if (method === 'secrets.reload') return { ok: true };
+    throw new Error(`Unexpected coordinator RPC: ${method}`);
+  }),
+};
+
 describe('host services', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    resetOpenClawConfigCoordinatorForTests();
+    authoritativeConfig = { channels: {} };
+    configRevision = 0;
+    coordinatorManager.rpc.mockClear();
+    registerOpenClawConfigCoordinator(coordinatorManager);
     getAllSettingsMock.mockResolvedValue(baseSettings);
     readOpenClawConfigMock.mockResolvedValue({ channels: {} });
     listConfiguredChannelsMock.mockResolvedValue([]);
@@ -364,9 +394,6 @@ describe('host services', () => {
     })).resolves.toEqual({ success: true });
 
     expect(setSettingMock).toHaveBeenCalledWith('proxyServer', 'http://127.0.0.1:7890');
-    expect(syncProxyConfigToOpenClawMock).toHaveBeenCalledWith(baseSettings, {
-      preserveExistingWhenDisabled: false,
-    });
     expect(applyProxySettingsMock).toHaveBeenCalledWith(baseSettings);
     expect(gatewayManager.restart).toHaveBeenCalledTimes(1);
   });
@@ -385,7 +412,7 @@ describe('host services', () => {
     expect(setSettingMock).toHaveBeenCalledWith('launchAtStartup', true);
     expect(resetSettingsMock).toHaveBeenCalledTimes(1);
     expect(syncLaunchAtStartupSettingFromStoreMock).toHaveBeenCalledTimes(2);
-    expect(syncProxyConfigToOpenClawMock).toHaveBeenCalledTimes(1);
+    expect(applyProxySettingsMock).toHaveBeenCalledTimes(1);
     expect(gatewayManager.restart).not.toHaveBeenCalled();
   });
 
@@ -678,7 +705,9 @@ describe('host services', () => {
           },
         },
       },
+      bindings: [{ agentId: 'main', match: { channel: 'feishu', accountId: 'team-bot' } }],
     };
+    authoritativeConfig = openClawConfig;
     readOpenClawConfigMock.mockResolvedValue(openClawConfig);
     listConfiguredChannelsFromConfigMock.mockResolvedValue(['feishu']);
     listConfiguredChannelAccountsFromConfigMock.mockReturnValue({
@@ -698,7 +727,10 @@ describe('host services', () => {
       },
     });
     const gatewayManager = {
-      rpc: vi.fn(),
+      rpc: vi.fn().mockResolvedValue({
+        channelAccounts: { feishu: [{ accountId: 'team-bot', configured: true }] },
+        channelDefaultAccountId: { feishu: 'team-bot' },
+      }),
       getStatus: vi.fn(() => ({ state: 'running', port: 18789 })),
       getDiagnostics: vi.fn(() => ({ consecutiveHeartbeatMisses: 0, consecutiveRpcFailures: 0 })),
     };
@@ -723,7 +755,7 @@ describe('host services', () => {
         ],
       });
 
-    expect(gatewayManager.rpc).not.toHaveBeenCalled();
+    expect(gatewayManager.rpc).toHaveBeenCalledWith('channels.status', { probe: false });
   });
 
   it('lists channel targets from session history and validates channel type', async () => {
@@ -756,13 +788,7 @@ describe('host services', () => {
         success: true,
         channelType: 'dingtalk',
         accountId: 'ding-main',
-        targets: [
-          {
-            value: 'cid-group-1',
-            label: 'Release Room (cid-group-1)',
-            kind: 'group',
-          },
-        ],
+        targets: [],
       });
     await expect(channelsApi.targets({ accountId: 'ding-main' })).rejects.toThrow('channelType is required');
   });
@@ -789,12 +815,14 @@ describe('host services', () => {
       agentId: 'main',
     })).resolves.toEqual({ success: true });
 
-    expect(assignChannelAccountToAgentMock).toHaveBeenCalledWith('main', 'feishu', 'default');
+    expect(authoritativeConfig).toMatchObject({
+      bindings: [{ agentId: 'main', match: { channel: 'feishu', accountId: 'default' } }],
+    });
     expect(gatewayManager.debouncedRestart).not.toHaveBeenCalled();
     expect(gatewayManager.debouncedReload).not.toHaveBeenCalled();
   });
 
-  it('requests legacy migration inside the scoped binding transaction', async () => {
+  it('writes scoped channel bindings directly to the remote config transaction', async () => {
     listAgentsSnapshotMock.mockResolvedValue({
       agents: [{ id: 'research', name: 'Research' }],
       defaultAgentId: 'research',
@@ -811,16 +839,12 @@ describe('host services', () => {
       agentId: 'research',
     })).resolves.toEqual({ success: true });
 
-    expect(assignChannelAccountToAgentMock).toHaveBeenCalledWith(
-      'research',
-      'feishu',
-      'research',
-      { migrateLegacy: true },
-    );
-    expect(migrateLegacyChannelWideBindingMock).not.toHaveBeenCalled();
+    expect(authoritativeConfig).toMatchObject({
+      bindings: [{ agentId: 'research', match: { channel: 'feishu', accountId: 'research' } }],
+    });
   });
 
-  it('installs plugin, saves config, and ensures scoped binding without scheduling lifecycle work', async () => {
+  it('saves channel accounts through the remote config transaction without lifecycle work', async () => {
     listAgentsSnapshotMock.mockResolvedValue({
       agents: [{ id: 'main', name: 'Main' }],
       defaultAgentId: 'main',
@@ -843,18 +867,22 @@ describe('host services', () => {
       config: { appId: 'cli_new', appSecret: 'new-secret' },
     })).resolves.toEqual({ success: true });
 
-    expect(ensureFeishuPluginInstalledMock).toHaveBeenCalledTimes(1);
-    expect(saveChannelConfigMock).toHaveBeenCalledWith(
-      'feishu',
-      { appId: 'cli_new', appSecret: 'new-secret' },
-      'default',
-    );
-    expect(ensureScopedChannelBindingMock).toHaveBeenCalledWith('feishu', 'default');
+    expect(authoritativeConfig).toMatchObject({
+      channels: {
+        feishu: {
+          enabled: true,
+          defaultAccount: 'default',
+          accounts: {
+            default: { appId: 'cli_new', appSecret: 'new-secret', enabled: true },
+          },
+        },
+      },
+    });
     expect(gatewayManager.debouncedRestart).not.toHaveBeenCalled();
     expect(gatewayManager.debouncedReload).not.toHaveBeenCalled();
   });
 
-  it('deletes agents by awaiting config commit then removing workspace without restarting', async () => {
+  it('deletes agents through the remote config helper without local workspace cleanup', async () => {
     const snapshot = {
       agents: [],
       defaultAgentId: 'main',
@@ -877,9 +905,7 @@ describe('host services', () => {
 
     expect(deleteAgentConfigMock).toHaveBeenCalledWith('code');
     expect(gatewayManager.restart).not.toHaveBeenCalled();
-    expect(removeAgentWorkspaceDirectoryMock).toHaveBeenCalledWith(removedEntry);
-    expect(deleteAgentConfigMock.mock.invocationCallOrder[0])
-      .toBeLessThan(removeAgentWorkspaceDirectoryMock.mock.invocationCallOrder[0]);
+    expect(removeAgentWorkspaceDirectoryMock).not.toHaveBeenCalled();
   });
 
   it('updates agent model without scheduling lifecycle work', async () => {
@@ -908,8 +934,8 @@ describe('host services', () => {
     })).resolves.toEqual({ success: true, ...snapshot });
 
     expect(agentConfig.updateAgentModel).toHaveBeenCalledWith('main', 'custom-enterpri/claude-sonnet-4');
-    expect(providerRuntimeSync.syncAllProviderAuthToRuntime).toHaveBeenCalledTimes(1);
-    expect(providerRuntimeSync.syncAgentModelOverrideToRuntime).toHaveBeenCalledWith('main');
+    expect(providerRuntimeSync.syncAllProviderAuthToRuntime).not.toHaveBeenCalled();
+    expect(providerRuntimeSync.syncAgentModelOverrideToRuntime).not.toHaveBeenCalled();
     expect(gatewayManager.debouncedReload).not.toHaveBeenCalled();
   });
 
@@ -1005,6 +1031,16 @@ describe('host services', () => {
   });
 
   it('handles channel default, binding delete, enable, delete, login, and no-change without lifecycle work', async () => {
+    authoritativeConfig = {
+      channels: {
+        feishu: {
+          enabled: true,
+          defaultAccount: 'default',
+          accounts: { default: { appId: 'same', appSecret: 'same-secret' } },
+        },
+      },
+      bindings: [{ agentId: 'main', match: { channel: 'feishu', accountId: 'default' } }],
+    };
     getChannelFormValuesMock.mockResolvedValue({ appId: 'same', appSecret: 'same-secret' });
     listAgentsSnapshotMock.mockResolvedValue({
       agents: [{ id: 'main', name: 'Main' }],
@@ -1019,6 +1055,7 @@ describe('host services', () => {
       debouncedReload: vi.fn(),
       debouncedRestart: vi.fn(),
       restart: vi.fn(),
+      rpc: vi.fn().mockResolvedValue({ ok: true }),
     };
     const { createChannelsApi } = await import('@electron/services/channels-api');
     const channelsApi = createChannelsApi({ gatewayManager: gatewayManager as never });
@@ -1033,13 +1070,22 @@ describe('host services', () => {
       channelType: 'feishu',
       accountId: 'default',
       config: { appId: 'same', appSecret: 'same-secret' },
-    })).resolves.toEqual({ success: true, noChange: true });
+    })).resolves.toEqual({ success: true });
 
-    expect(setChannelDefaultAccountMock).toHaveBeenCalledWith('feishu', 'default');
-    expect(clearChannelBindingMock).toHaveBeenCalledWith('feishu', 'default');
-    expect(setChannelEnabledMock).toHaveBeenCalledWith('feishu', true);
-    expect(deleteChannelAccountConfigMock).toHaveBeenCalledWith('feishu', 'default');
-    expect(deleteChannelConfigMock).toHaveBeenCalledWith('feishu');
+    expect(gatewayManager.rpc).toHaveBeenCalledWith('channels.start', { channel: 'feishu' });
+    expect(gatewayManager.rpc).toHaveBeenCalledWith('channels.start', {
+      channel: 'whatsapp',
+      accountId: 'default',
+    });
+    expect(authoritativeConfig).toMatchObject({
+      channels: {
+        feishu: {
+          enabled: true,
+          defaultAccount: 'default',
+          accounts: { default: { appId: 'same', appSecret: 'same-secret', enabled: true } },
+        },
+      },
+    });
     expect(gatewayManager.debouncedReload).not.toHaveBeenCalled();
     expect(gatewayManager.debouncedRestart).not.toHaveBeenCalled();
     expect(gatewayManager.restart).not.toHaveBeenCalled();
@@ -1052,7 +1098,7 @@ describe('host services', () => {
     expect(source).not.toContain('debouncedRestart(8000)');
   });
 
-  it('persists successful WeChat login without scheduling lifecycle work', async () => {
+  it('starts WeChat login through the remote Gateway without local persistence work', async () => {
     startWeChatLoginSessionMock.mockResolvedValue({
       qrcodeUrl: 'https://example.com/qr',
       sessionKey: 'session-1',
@@ -1078,14 +1124,17 @@ describe('host services', () => {
       debouncedReload: vi.fn(),
       debouncedRestart: vi.fn(),
       restart: vi.fn(),
+      rpc: vi.fn().mockResolvedValue({ ok: true }),
     };
     const { createChannelsApi } = await import('@electron/services/channels-api');
 
     await createChannelsApi({ gatewayManager: gatewayManager as never }).startLogin({ channelType: 'wechat' });
 
-    await vi.waitFor(() => {
-      expect(saveChannelConfigMock).toHaveBeenCalledWith('wechat', { enabled: true }, 'wx-account');
+    expect(gatewayManager.rpc).toHaveBeenCalledWith('channels.start', {
+      channel: 'wechat',
+      accountId: 'default',
     });
+    expect(saveChannelConfigMock).not.toHaveBeenCalled();
     expect(gatewayManager.debouncedReload).not.toHaveBeenCalled();
     expect(gatewayManager.debouncedRestart).not.toHaveBeenCalled();
     expect(gatewayManager.restart).not.toHaveBeenCalled();
@@ -1139,20 +1188,18 @@ describe('host services', () => {
 
     expect(snapshot).toMatchObject({
       platform: process.platform,
-      channels: [
-        expect.objectContaining({
-          channelType: 'feishu',
-          accounts: [expect.objectContaining({ accountId: 'default', agentId: 'main' })],
-        }),
-      ],
+      channels: {
+        channels: { feishu: { configured: true } },
+        channelAccounts: {
+          feishu: [expect.objectContaining({ accountId: 'default', connected: true })],
+        },
+      },
       openxLogTail: 'openx-log-tail',
       gateway: expect.objectContaining({
-        state: 'healthy',
+        state: 'running',
         capabilities: { rpc: true },
       }),
     });
-    expect(snapshot.gatewayLogTail).toContain('gateway-one');
-    expect(snapshot.gatewayErrLogTail).toBe('');
   });
 
   it('records and returns ACP diagnostics trace entries', async () => {

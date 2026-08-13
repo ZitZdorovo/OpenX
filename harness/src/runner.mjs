@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import path from 'node:path';
 import { ROOT } from './specs.mjs';
 
 export async function runStep(step) {
@@ -7,7 +8,9 @@ export async function runStep(step) {
     const child = spawn(step.command, step.args, {
       cwd: ROOT,
       stdio: 'inherit',
-      shell: process.platform === 'win32',
+      // Windows needs a shell for command shims such as pnpm.cmd, but routing
+      // an absolute executable through cmd.exe breaks paths containing spaces.
+      shell: process.platform === 'win32' && !path.isAbsolute(step.command),
     });
 
     child.on('close', (exitCode) => {

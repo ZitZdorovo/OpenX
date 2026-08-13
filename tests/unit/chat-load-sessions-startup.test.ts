@@ -108,8 +108,13 @@ describe('chat session catalog startup', () => {
     expect(useChatStore.getState().currentSessionKey).toBe('agent:main:session-a');
     expect(gatewayRpcMock).toHaveBeenCalledTimes(1);
     expect(gatewayRpcMock).toHaveBeenCalledWith('sessions.list', {
+      limit: 200,
+      offset: 0,
       includeDerivedTitles: true,
       includeLastMessage: true,
+      includeGlobal: true,
+      includeUnknown: true,
+      configuredAgentsOnly: true,
     });
   });
 
