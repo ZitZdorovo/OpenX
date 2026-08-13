@@ -5,10 +5,21 @@ async function readNativeMenuLabels(app: ElectronApplication) {
   return await app.evaluate(({ Menu }) => {
     const menu = Menu.getApplicationMenu();
     const fileMenu = menu?.items.find((item) => item.label === 'Файл' || item.label === 'File');
+    const findMenuItem = (
+      items: Electron.MenuItem[],
+      predicate: (item: Electron.MenuItem) => boolean,
+    ): Electron.MenuItem | undefined => {
+      for (const item of items) {
+        if (predicate(item)) return item;
+        const child = item.submenu ? findMenuItem(item.submenu.items, predicate) : undefined;
+        if (child) return child;
+      }
+      return undefined;
+    };
     return {
       topLevel: menu?.items.map((item) => item.label) ?? [],
       file: fileMenu?.label,
-      quit: fileMenu?.submenu?.items.find((item) => item.role === 'quit')?.label,
+      quit: findMenuItem(menu?.items ?? [], (item) => item.role === 'quit')?.label,
       numberedNavigationAccelerators: menu?.items
         .flatMap((item) => item.submenu?.items ?? [])
         .filter((item) => ['navigate-dashboard', 'navigate-chat', 'navigate-channels', 'navigate-skills', 'navigate-cron'].includes(item.id))

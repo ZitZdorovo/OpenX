@@ -27,6 +27,10 @@ import type { ChatFolder, ChatProject } from '@shared/types/chat-organization';
 import type { ChatSession } from '@shared/chat/types';
 import { toast } from 'sonner';
 import { DEFAULT_WORKSPACE_CWD } from '@/lib/workspace-context';
+import {
+  MAC_SIDEBAR_CHROME_HEIGHT,
+  MAC_TRAFFIC_LIGHT_SAFE_INSET,
+} from '@shared/sidebar-layout';
 
 type DropTarget = { projectId: string; folderId: string | null; beforeChatKey?: string };
 type NodeContextMenu = { kind: 'project' | 'folder'; id: string; x: number; y: number };
@@ -142,6 +146,7 @@ function DropInsertionIndicator({ testId, edge = 'bottom' }: { testId?: string; 
 
 export function Sidebar() {
   const { t, i18n } = useTranslation('organization');
+  const isMac = window.electron?.platform === 'darwin';
   const navigate = useNavigate();
   const collapsed = useSettingsStore((state) => state.sidebarCollapsed);
   const width = useSettingsStore((state) => state.sidebarWidth);
@@ -877,6 +882,14 @@ export function Sidebar() {
             if (collapsed) setHoverExpanded(false);
           }}
         >
+      {isMac && (
+        <div
+          data-testid="mac-sidebar-chrome"
+          aria-hidden="true"
+          className="drag-region absolute inset-x-0 top-0 z-20"
+          style={{ height: MAC_SIDEBAR_CHROME_HEIGHT }}
+        />
+      )}
       <div
         role="separator"
         aria-orientation="vertical"
@@ -893,12 +906,16 @@ export function Sidebar() {
           }}
         />
       </div>
-      <div className="flex h-11 items-center gap-1 px-3 pt-1" data-testid="openx-sidebar-header">
+      <div
+        className="flex h-11 items-center gap-1 px-3 pt-1"
+        style={isMac ? { paddingLeft: MAC_TRAFFIC_LIGHT_SAFE_INSET } : undefined}
+        data-testid="openx-sidebar-header"
+      >
         <span className="min-w-0 flex-1 truncate px-1 text-base font-bold tracking-tight text-foreground" title="OpenX">OpenX</span>
         {collapsed && hoverExpanded && (
           <button
             type="button"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-black/5 hover:text-foreground dark:hover:bg-white/5"
+            className="no-drag relative z-30 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-black/5 hover:text-foreground dark:hover:bg-white/5"
             title={t('lockSidebar')}
             aria-label={t('lockSidebar')}
             onClick={() => {
@@ -911,7 +928,7 @@ export function Sidebar() {
         )}
         <button
           type="button"
-          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-black/5 hover:text-foreground dark:hover:bg-white/5"
+          className="no-drag relative z-30 flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-black/5 hover:text-foreground dark:hover:bg-white/5"
           title={t('focusSearch')}
           aria-label={t('focusSearch')}
           onClick={() => setSearchOpen(true)}
